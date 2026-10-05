@@ -12,58 +12,68 @@
  */
 import { SEVERITY, derive, evaluateRules, windowFor } from './rules';
 import { addDays } from './time';
-import type { Checkin, DayState, StateWord } from './types';
+import type { Checkin, Clause, DayState, StateWord } from './types';
 
 type Word = Exclude<StateWord, 'nodata'>;
 
 export const HYSTERESIS_DAYS = 3;
 export const HISTORY_DAYS = 30;
+export const NODATA_RESET_DAYS = 7;
 
-export function displayedStates(checkins: readonly Checkin[], today: string, days: number = HISTORY_DAYS): DayState[] {
-  const out: DayState[] = [];
+export interface RawDay {
+  raw: StateWord;
+  hasCheckin: boolean;
+}
+
+/** The pure fold: raw states in → displayed states out. */
+export function foldHysteresis(days: readonly RawDay[]): { shown: StateWord; held: boolean }[] {
+  const out: { shown: StateWord; held: boolean }[] = [];
   let carry: Word | null = null;
   let qualifying: Word[] = [];
   let nodataRun = 0;
 
+  for (const { raw, hasCheckin } of days) {
+    if (raw === 'nodata') {
+      nodataRun += 1;
+      qualifying = [];
+      if (nodataRun >= NODATA_RESET_DAYS) carry = null;
+      out.push({ shown: 'nodata', held: false });
+      continue;
+    }
+    nodataRun = 0;
+    if (carry === null || SEVERITY[raw] > SEVERITY[carry]) {
+      // first word, or worsening: immediate
+      carry = raw;
+      qualifying = [];
+      out.push({ shown: raw, held: false });
+    } else if (SEVERITY[raw] < SEVERITY[carry]) {
+      if (hasCheckin) qualifying.push(raw);
+      if (qualifying.length >= HYSTERESIS_DAYS) {
+        const best = qualifying.slice(-HYSTERESIS_DAYS).reduce<Word>((a, b) => (SEVERITY[b] > SEVERITY[a] ? b : a), 'stable');
+        carry = best;
+        qualifying = [];
+        out.push({ shown: best, held: false });
+      } else {
+        out.push({ shown: carry, held: true });
+      }
+    } else {
+      qualifying = [];
+      out.push({ shown: carry, held: false });
+    }
+  }
+  return out;
+}
+
+export function displayedStates(checkins: readonly Checkin[], today: string, days: number = HISTORY_DAYS): DayState[] {
+  const raws: (RawDay & { date: string; clause: Clause })[] = [];
   for (let i = days - 1; i >= 0; i--) {
     const date = addDays(today, -i);
     const window = windowFor(checkins, date);
     const { state: raw, clause } = evaluateRules(derive(window));
-    const hasCheckin = window[6] !== null;
-    let shown: StateWord;
-    let held = false;
-
-    if (raw === 'nodata') {
-      nodataRun += 1;
-      qualifying = [];
-      if (nodataRun >= 7) carry = null;
-      shown = 'nodata';
-    } else {
-      nodataRun = 0;
-      if (carry === null || SEVERITY[raw] > SEVERITY[carry]) {
-        // first word, or worsening: immediate
-        carry = raw;
-        qualifying = [];
-        shown = raw;
-      } else if (SEVERITY[raw] < SEVERITY[carry]) {
-        if (hasCheckin) qualifying.push(raw);
-        if (qualifying.length >= HYSTERESIS_DAYS) {
-          const best = qualifying.slice(-HYSTERESIS_DAYS).reduce<Word>((a, b) => (SEVERITY[b] > SEVERITY[a] ? b : a), 'stable');
-          carry = best;
-          qualifying = [];
-          shown = best;
-        } else {
-          shown = carry;
-          held = true;
-        }
-      } else {
-        qualifying = [];
-        shown = carry;
-      }
-    }
-    out.push({ date, hasCheckin, raw, clause, shown, held });
+    raws.push({ date, raw, clause, hasCheckin: window[6] !== null });
   }
-  return out;
+  const folded = foldHysteresis(raws);
+  return raws.map((r, i) => ({ date: r.date, hasCheckin: r.hasCheckin, raw: r.raw, clause: r.clause, shown: folded[i].shown, held: folded[i].held }));
 }
 
 /** Consecutive displayed 'attention' days ending with the last entry. */

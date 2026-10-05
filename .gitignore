@@ -3,6 +3,7 @@ node_modules/
 
 # planning artefacts
 .omc/
+.claude/
 
 # Expo
 .expo/
