@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "NourishingX",
+    "slug": "nourishingx",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "nourishingx",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "org.nourishingx.app"
+    },
+    "android": {
+      "package": "org.nourishingx.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#9B1B30"
+      }
+    },
+    "web": {
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FAF6F0"
+        }
+      ],
+      "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "color": "#9B1B30",
+          "defaultChannel": "nourishingx"
+        }
+      ],
+      "expo-status-bar",
+      "expo-sharing"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "name": "Illustrative Boarding School (New Hampshire)",
+  "healthCenter": {
+    "phone": "+16035550100",
+    "phoneDisplay": "(603) 555-0100",
+    "hours": "8am–8pm daily",
+    "walkIn": "3:00–5:00pm, no appointment"
+  },
+  "dining": {
+    "breakfast": "7:00–8:00am",
+    "lunch": "11:30am–1:30pm",
+    "dinner": "5:30–7:30pm"
+  },
+  "actionsByClause": {
+    "A": ["Check in for a few more days and this will fill in"],
+    "B1": [
+      "Add a carb + protein snack after practice",
+      "Pick a protein + carb option at dinner, and take seconds",
+      "Talk to a trusted adult or the Health Center if the tiredness continues"
+    ],
+    "B2": [
+      "Pick a protein + carb option at dinner, and take seconds",
+      "Try the yogurt and granola station after your last class",
+      "Talk to a trusted adult or the Health Center if the tiredness continues"
+    ],
+    "B3": [
+      "Add a carb + protein snack after practice",
+      "Pick a protein + carb option at dinner, and take seconds",
+      "Talk to a trusted adult or the Health Center if the tiredness continues"
+    ],
+    "C1": [
+      "Add a carb + protein snack after practice",
+      "Pick a protein + carb option at dinner",
+      "Try the grab-and-go breakfast station this week"
+    ],
+    "C2": [
+      "Try the grab-and-go breakfast station this week",
+      "Pick a protein + carb option at dinner",
+      "Take a piece of fruit from the exit line on the way out"
+    ],
+    "C3": [
+      "Add a carb + protein snack after practice",
+      "Pick a protein + carb option at dinner, and take seconds"
+    ],
+    "C4": [
+      "Try the grab-and-go breakfast station this week",
+      "Take a piece of fruit from the exit line on the way out",
+      "Pick a protein + carb option at lunch"
+    ],
+    "D": ["Keep doing what you did this week"]
+  }
+}

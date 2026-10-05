@@ -1,0 +1,52 @@
+{
+  "source": "weekly-template",
+  "enteredBy": "dining-services",
+  "enteredAt": "2026-10-05T07:11:00",
+  "days": {
+    "weekday": {
+      "breakfast": [
+        { "item": "Scrambled eggs", "station": "Hot line", "tags": ["protein"] },
+        { "item": "Oatmeal bar", "station": "Hot line", "tags": ["carb", "toppings"] },
+        { "item": "Yogurt + granola", "station": "Cold station", "tags": ["protein", "carb"] },
+        { "item": "Grab-and-go bag", "station": "Exit line", "tags": ["carb", "protein"] },
+        { "item": "Fruit: bananas, apples, oranges", "station": "Exit line", "tags": ["fruit"] }
+      ],
+      "lunch": [
+        { "item": "Rice bowl (build your own)", "station": "Global station", "tags": ["carb", "protein"] },
+        { "item": "Grilled chicken plate", "station": "Hot line", "tags": ["protein"] },
+        { "item": "Salad bar · chickpeas, eggs, seeds", "station": "Cold station", "tags": ["vegetable", "protein"] },
+        { "item": "Soup: tomato basil", "station": "Soup well", "tags": ["vegetable"] }
+      ],
+      "dinner": [
+        { "item": "Chicken teriyaki bowl · rice, broccoli", "station": "Hot line", "tags": ["protein", "carb"] },
+        { "item": "Pasta bar · marinara or alfredo", "station": "Global station", "tags": ["carb"] },
+        { "item": "Grilled tofu & vegetable stir fry", "station": "Hot line", "tags": ["vegetarian"] },
+        { "item": "Soup: chicken noodle, tomato basil", "station": "Soup well", "tags": ["vegetable"] },
+        { "item": "Salad bar · chickpeas, eggs, seeds", "station": "Cold station", "tags": ["vegetable"] },
+        { "item": "Yogurt + granola station", "station": "Cold station", "tags": ["protein", "carb"] },
+        { "item": "Fruit · bananas, apples, oranges", "station": "Exit line", "tags": ["fruit"] },
+        { "item": "Chocolate milk", "station": "Beverage", "tags": ["recovery"] }
+      ]
+    },
+    "weekend": {
+      "breakfast": [
+        { "item": "Pancakes", "station": "Hot line", "tags": ["carb"] },
+        { "item": "Scrambled eggs", "station": "Hot line", "tags": ["protein"] },
+        { "item": "Yogurt + granola", "station": "Cold station", "tags": ["protein", "carb"] },
+        { "item": "Fruit: bananas, apples, oranges", "station": "Exit line", "tags": ["fruit"] }
+      ],
+      "lunch": [
+        { "item": "Pizza", "station": "Grill", "tags": ["carb"] },
+        { "item": "Salad bar", "station": "Cold station", "tags": ["vegetable"] },
+        { "item": "Soup (rotating)", "station": "Soup well", "tags": ["vegetable"] }
+      ],
+      "dinner": [
+        { "item": "Pasta bar · marinara or alfredo", "station": "Global station", "tags": ["carb"] },
+        { "item": "Grilled chicken plate", "station": "Hot line", "tags": ["protein"] },
+        { "item": "Salad bar", "station": "Cold station", "tags": ["vegetable"] },
+        { "item": "Fruit · bananas, apples, oranges", "station": "Exit line", "tags": ["fruit"] },
+        { "item": "Chocolate milk", "station": "Beverage", "tags": ["recovery"] }
+      ]
+    }
+  }
+}
