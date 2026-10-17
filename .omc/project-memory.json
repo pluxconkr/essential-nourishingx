@@ -1,0 +1,168 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1791956268593,
+  "projectRoot": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "jest",
+        "version": "29.7.0",
+        "category": "testing"
+      },
+      {
+        "name": "react",
+        "version": "19.2.3",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "19.2.3",
+        "category": "frontend"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": "npm test",
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run start",
+    "scripts": {
+      "start": "expo start",
+      "android": "expo start --android",
+      "ios": "expo start --ios",
+      "web": "expo start --web",
+      "lint": "expo lint",
+      "test": "jest",
+      "test:watch": "jest --watchAll",
+      "typecheck": "tsc --noEmit"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": "*.test.ts",
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "__tests__",
+      "assets",
+      "docs",
+      "src"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "__mocks__": {
+      "path": "__mocks__",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1791956268582,
+      "keyFiles": []
+    },
+    "__tests__": {
+      "path": "__tests__",
+      "purpose": "Test files",
+      "fileCount": 6,
+      "lastAccessed": 1791956268582,
+      "keyFiles": [
+        "counters.test.ts",
+        "evidence-actions.test.ts",
+        "hysteresis.test.ts",
+        "rules.test.ts",
+        "store.test.ts"
+      ]
+    },
+    "assets": {
+      "path": "assets",
+      "purpose": "Static assets",
+      "fileCount": 0,
+      "lastAccessed": 1791956268584,
+      "keyFiles": []
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 1,
+      "lastAccessed": 1791956268584,
+      "keyFiles": [
+        "thresholds.md"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1791956268584,
+      "keyFiles": []
+    },
+    "assets/data": {
+      "path": "assets/data",
+      "purpose": "Data files",
+      "fileCount": 2,
+      "lastAccessed": 1791956268585,
+      "keyFiles": [
+        "menu.json",
+        "school.json"
+      ]
+    },
+    "src/app": {
+      "path": "src/app",
+      "purpose": "Application code",
+      "fileCount": 8,
+      "lastAccessed": 1791956268585,
+      "keyFiles": [
+        "+not-found.tsx",
+        "_layout.tsx",
+        "consent.tsx"
+      ]
+    },
+    "src/data": {
+      "path": "src/data",
+      "purpose": "Data files",
+      "fileCount": 4,
+      "lastAccessed": 1791956268585,
+      "keyFiles": [
+        "db.ts",
+        "db.web.ts",
+        "registry.ts"
+      ]
+    },
+    "src/services": {
+      "path": "src/services",
+      "purpose": "Business logic services",
+      "fileCount": 5,
+      "lastAccessed": 1791956268585,
+      "keyFiles": [
+        "export.ts",
+        "export.web.ts",
+        "menu.ts"
+      ]
+    }
+  },
+  "hotPaths": [],
+  "userDirectives": []
+}

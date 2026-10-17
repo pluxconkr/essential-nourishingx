@@ -1,0 +1,376 @@
+{
+  "version": 1,
+  "jobId": "8655f100-e9ad-4b40-9771-af0124ee3cc2",
+  "sessionId": "b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6",
+  "scopeKey": "7fa4259c4f22c360841dd8d5812b0a4206bfda25faa4b787599dd70798b64a7d",
+  "revision": 63,
+  "createdAt": "2026-10-05T15:25:45.545Z",
+  "updatedAt": "2026-10-05T15:26:16.933Z",
+  "producerGraceExpiresAt": "2026-10-05T15:26:15.546Z",
+  "bestEffortDeadlineAt": "2026-10-05T15:27:08.546Z",
+  "producers": {
+    "core": {
+      "state": "sealed",
+      "intentKey": "ef8baddb082f55df652a13c4c4b02e60d6538cfd1cdbcf5efa3f9fef9824827c",
+      "payloadDigest": "ef8baddb082f55df652a13c4c4b02e60d6538cfd1cdbcf5efa3f9fef9824827c",
+      "sealedAt": "2026-10-05T15:26:15.884Z",
+      "sealedBy": "recovery"
+    },
+    "wiki": {
+      "state": "no-op",
+      "sealedAt": "2026-10-05T15:25:45.558Z",
+      "sealedBy": "wiki-producer"
+    }
+  },
+  "actions": {
+    "foreground-cleanup": {
+      "class": "required",
+      "phase": "deferred-required",
+      "status": "completed",
+      "attempts": 1,
+      "idempotencyKey": "ca9c128ba4b6911f437ec30a481f7ea194ac80e3b6ce11fef0d1e964a28ac150",
+      "payload": {
+        "transcriptPath": "/Users/justiceserv/.claude/projects/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6.jsonl",
+        "cwd": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+        "reason": "other",
+        "input": {
+          "session_id": "b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6",
+          "transcript_path": "/Users/justiceserv/.claude/projects/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6.jsonl",
+          "cwd": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+          "scratchpad_dir": "/private/tmp/claude-501/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6/scratchpad",
+          "prompt_id": "3e69fd73-147a-46c6-a2ce-ba01ea2bc2fd",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        },
+        "initialTeamNames": [],
+        "openClawRouting": {},
+        "metrics": {
+          "session_id": "b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6",
+          "ended_at": "2026-10-05T15:26:15.749Z",
+          "reason": "other",
+          "agents_spawned": 0,
+          "agents_completed": 0,
+          "modes_used": []
+        }
+      },
+      "budgetMs": 9000,
+      "claimedAt": "2026-10-05T15:26:15.610Z",
+      "runner": {
+        "attempt": 1,
+        "runnerNonce": "ba237a7f-4642-4e55-9767-d7a5b2ee7f48",
+        "phase": "terminal",
+        "deadlineAt": "2026-10-05T15:26:25.549Z"
+      },
+      "lastOutcomeCode": "completed",
+      "completedAt": "2026-10-05T15:26:15.875Z"
+    },
+    "wiki-capture": {
+      "class": "required",
+      "phase": "deferred-required",
+      "status": "completed",
+      "attempts": 0,
+      "idempotencyKey": "39ae92301ba285d61f3407cb2ab767fe9e95628df024d9983c6ef32efe99815d",
+      "payload": {
+        "transcriptPath": "/Users/justiceserv/.claude/projects/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6.jsonl",
+        "cwd": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+        "reason": "other",
+        "input": {
+          "session_id": "b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6",
+          "transcript_path": "/Users/justiceserv/.claude/projects/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6.jsonl",
+          "cwd": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+          "scratchpad_dir": "/private/tmp/claude-501/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6/scratchpad",
+          "prompt_id": "3e69fd73-147a-46c6-a2ce-ba01ea2bc2fd",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        },
+        "initialTeamNames": [],
+        "openClawRouting": {}
+      },
+      "budgetMs": 9000,
+      "completedAt": "2026-10-05T15:25:45.558Z"
+    },
+    "team-cleanup": {
+      "class": "required",
+      "phase": "deferred-required",
+      "status": "completed",
+      "attempts": 1,
+      "idempotencyKey": "616520f67834633d571e4449dc1f4f082d5dd267559615b00e8edf108d2819e7",
+      "payload": {
+        "transcriptPath": "/Users/justiceserv/.claude/projects/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6.jsonl",
+        "cwd": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+        "reason": "other",
+        "input": {
+          "session_id": "b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6",
+          "transcript_path": "/Users/justiceserv/.claude/projects/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6.jsonl",
+          "cwd": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+          "scratchpad_dir": "/private/tmp/claude-501/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6/scratchpad",
+          "prompt_id": "3e69fd73-147a-46c6-a2ce-ba01ea2bc2fd",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        },
+        "initialTeamNames": [],
+        "openClawRouting": {},
+        "metrics": {
+          "session_id": "b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6",
+          "ended_at": "2026-10-05T15:26:15.749Z",
+          "reason": "other",
+          "agents_spawned": 0,
+          "agents_completed": 0,
+          "modes_used": []
+        }
+      },
+      "budgetMs": 9000,
+      "claimedAt": "2026-10-05T15:26:15.904Z",
+      "runner": {
+        "attempt": 1,
+        "runnerNonce": "cf06da6e-34a5-43a3-a918-8035571a6abc",
+        "phase": "terminal",
+        "deadlineAt": "2026-10-05T15:26:25.549Z"
+      },
+      "lastOutcomeCode": "completed",
+      "completedAt": "2026-10-05T15:26:16.030Z"
+    },
+    "python-cleanup": {
+      "class": "required",
+      "phase": "deferred-required",
+      "status": "completed",
+      "attempts": 1,
+      "idempotencyKey": "433a7103c4a4eb75d2dab93c23517942711cb503750204a79e910b923be570c0",
+      "payload": {
+        "transcriptPath": "/Users/justiceserv/.claude/projects/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6.jsonl",
+        "cwd": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+        "reason": "other",
+        "input": {
+          "session_id": "b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6",
+          "transcript_path": "/Users/justiceserv/.claude/projects/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6.jsonl",
+          "cwd": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+          "scratchpad_dir": "/private/tmp/claude-501/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6/scratchpad",
+          "prompt_id": "3e69fd73-147a-46c6-a2ce-ba01ea2bc2fd",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        },
+        "initialTeamNames": [],
+        "openClawRouting": {},
+        "metrics": {
+          "session_id": "b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6",
+          "ended_at": "2026-10-05T15:26:15.749Z",
+          "reason": "other",
+          "agents_spawned": 0,
+          "agents_completed": 0,
+          "modes_used": []
+        }
+      },
+      "budgetMs": 9000,
+      "claimedAt": "2026-10-05T15:26:16.048Z",
+      "runner": {
+        "attempt": 1,
+        "runnerNonce": "6a48024a-db8e-4a94-87e1-f39040040e49",
+        "phase": "terminal",
+        "deadlineAt": "2026-10-05T15:26:25.549Z"
+      },
+      "lastOutcomeCode": "completed",
+      "completedAt": "2026-10-05T15:26:16.210Z"
+    },
+    "reply-cleanup": {
+      "class": "required",
+      "phase": "deferred-required",
+      "status": "completed",
+      "attempts": 1,
+      "idempotencyKey": "cd1ea5eb3205ea9a9fb4b505360f68148efe2902612b90aa4ac8705c8f282c85",
+      "payload": {
+        "transcriptPath": "/Users/justiceserv/.claude/projects/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6.jsonl",
+        "cwd": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+        "reason": "other",
+        "input": {
+          "session_id": "b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6",
+          "transcript_path": "/Users/justiceserv/.claude/projects/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6.jsonl",
+          "cwd": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+          "scratchpad_dir": "/private/tmp/claude-501/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6/scratchpad",
+          "prompt_id": "3e69fd73-147a-46c6-a2ce-ba01ea2bc2fd",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        },
+        "initialTeamNames": [],
+        "openClawRouting": {}
+      },
+      "budgetMs": 9000,
+      "claimedAt": "2026-10-05T15:26:16.229Z",
+      "runner": {
+        "attempt": 1,
+        "runnerNonce": "b66f5911-808c-41c0-8e4e-efaa30e1c123",
+        "phase": "terminal",
+        "deadlineAt": "2026-10-05T15:26:25.549Z"
+      },
+      "lastOutcomeCode": "completed",
+      "completedAt": "2026-10-05T15:26:16.350Z"
+    },
+    "callback": {
+      "class": "best-effort",
+      "phase": "deferred-best-effort",
+      "status": "completed",
+      "attempts": 1,
+      "idempotencyKey": "d2c6d94fdc8de9d4379eadf9323c7d95a03f0f07372723f8a688c617eb76b4e3",
+      "payload": {
+        "transcriptPath": "/Users/justiceserv/.claude/projects/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6.jsonl",
+        "cwd": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+        "reason": "other",
+        "input": {
+          "session_id": "b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6",
+          "transcript_path": "/Users/justiceserv/.claude/projects/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6.jsonl",
+          "cwd": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+          "scratchpad_dir": "/private/tmp/claude-501/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6/scratchpad",
+          "prompt_id": "3e69fd73-147a-46c6-a2ce-ba01ea2bc2fd",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        },
+        "initialTeamNames": [],
+        "openClawRouting": {},
+        "metrics": {
+          "session_id": "b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6",
+          "ended_at": "2026-10-05T15:26:15.749Z",
+          "reason": "other",
+          "agents_spawned": 0,
+          "agents_completed": 0,
+          "modes_used": []
+        }
+      },
+      "budgetMs": 2000,
+      "claimedAt": "2026-10-05T15:26:16.367Z",
+      "runner": {
+        "attempt": 1,
+        "runnerNonce": "f21363f4-2c29-49c0-85a5-d1d5e5007eb5",
+        "phase": "terminal",
+        "deadlineAt": "2026-10-05T15:26:25.549Z"
+      },
+      "lastOutcomeCode": "completed",
+      "completedAt": "2026-10-05T15:26:16.490Z"
+    },
+    "notification": {
+      "class": "best-effort",
+      "phase": "deferred-best-effort",
+      "status": "completed",
+      "attempts": 1,
+      "idempotencyKey": "48d76725eb2a81f307bacd45734310eb14eaaad519bb99f8cfaec2e789d6c1c9",
+      "payload": {
+        "transcriptPath": "/Users/justiceserv/.claude/projects/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6.jsonl",
+        "cwd": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+        "reason": "other",
+        "input": {
+          "session_id": "b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6",
+          "transcript_path": "/Users/justiceserv/.claude/projects/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6.jsonl",
+          "cwd": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+          "scratchpad_dir": "/private/tmp/claude-501/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6/scratchpad",
+          "prompt_id": "3e69fd73-147a-46c6-a2ce-ba01ea2bc2fd",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        },
+        "initialTeamNames": [],
+        "openClawRouting": {},
+        "metrics": {
+          "session_id": "b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6",
+          "ended_at": "2026-10-05T15:26:15.749Z",
+          "reason": "other",
+          "agents_spawned": 0,
+          "agents_completed": 0,
+          "modes_used": []
+        }
+      },
+      "budgetMs": 2000,
+      "claimedAt": "2026-10-05T15:26:16.508Z",
+      "runner": {
+        "attempt": 1,
+        "runnerNonce": "ce0b70f5-f037-4a49-b5e2-4194eb5dd93d",
+        "phase": "terminal",
+        "deadlineAt": "2026-10-05T15:26:25.549Z"
+      },
+      "lastOutcomeCode": "completed",
+      "completedAt": "2026-10-05T15:26:16.627Z"
+    },
+    "openclaw": {
+      "class": "best-effort",
+      "phase": "deferred-best-effort",
+      "status": "completed",
+      "attempts": 1,
+      "idempotencyKey": "a0d13bcfd12a987775e069d01c0083cb566f88c68d3f8701dbd42348869f460f",
+      "payload": {
+        "transcriptPath": "/Users/justiceserv/.claude/projects/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6.jsonl",
+        "cwd": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+        "reason": "other",
+        "input": {
+          "session_id": "b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6",
+          "transcript_path": "/Users/justiceserv/.claude/projects/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6.jsonl",
+          "cwd": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+          "scratchpad_dir": "/private/tmp/claude-501/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6/scratchpad",
+          "prompt_id": "3e69fd73-147a-46c6-a2ce-ba01ea2bc2fd",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        },
+        "initialTeamNames": [],
+        "openClawRouting": {},
+        "metrics": {
+          "session_id": "b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6",
+          "ended_at": "2026-10-05T15:26:15.749Z",
+          "reason": "other",
+          "agents_spawned": 0,
+          "agents_completed": 0,
+          "modes_used": []
+        }
+      },
+      "budgetMs": 2000,
+      "claimedAt": "2026-10-05T15:26:16.645Z",
+      "runner": {
+        "attempt": 1,
+        "runnerNonce": "b187a5b6-73ad-4d47-b52c-1e53321901bc",
+        "phase": "terminal",
+        "deadlineAt": "2026-10-05T15:26:25.549Z"
+      },
+      "lastOutcomeCode": "completed",
+      "completedAt": "2026-10-05T15:26:16.761Z"
+    },
+    "spawn-next": {
+      "class": "best-effort",
+      "phase": "deferred-best-effort",
+      "status": "completed",
+      "attempts": 1,
+      "idempotencyKey": "1022c9758b4ccb99388df3563f7555eda26d53aae40e50463c59061c07f3c8c9",
+      "payload": {
+        "transcriptPath": "/Users/justiceserv/.claude/projects/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6.jsonl",
+        "cwd": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+        "reason": "other",
+        "input": {
+          "session_id": "b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6",
+          "transcript_path": "/Users/justiceserv/.claude/projects/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6.jsonl",
+          "cwd": "/Users/justiceserv/Codes/essential-congressional-apps/nourishingx",
+          "scratchpad_dir": "/private/tmp/claude-501/-Users-justiceserv-Codes-essential-congressional-apps-nourishingx/b699d9cd-8f1c-4f5e-9952-b9fd1683a9b6/scratchpad",
+          "prompt_id": "3e69fd73-147a-46c6-a2ce-ba01ea2bc2fd",
+          "hook_event_name": "SessionEnd",
+          "reason": "other"
+        },
+        "initialTeamNames": [],
+        "openClawRouting": {}
+      },
+      "budgetMs": 2000,
+      "claimedAt": "2026-10-05T15:26:16.780Z",
+      "runner": {
+        "attempt": 1,
+        "runnerNonce": "a0fb641d-ebb0-4ae9-9284-59888d3e24de",
+        "phase": "terminal",
+        "deadlineAt": "2026-10-05T15:26:25.549Z"
+      },
+      "lastOutcomeCode": "completed",
+      "completedAt": "2026-10-05T15:26:16.900Z"
+    }
+  },
+  "owner": null,
+  "phase": "complete",
+  "recoverableFailure": {
+    "reason": "actions-settled",
+    "releasedAt": "2026-10-05T15:26:16.916Z",
+    "ownerNonce": "35753652-c9f1-483c-b7bb-de89cc04ae2f"
+  },
+  "completion": {
+    "completedAt": "2026-10-05T15:26:16.916Z",
+    "terminalDigest": "d36218e812abf4bf53a22dce8e2e28fbb161a10a3d072861c2aeb13cbc61c10c",
+    "terminalRevision": 62
+  }
+}
