@@ -6,6 +6,9 @@ export function toCsv(checkins: readonly Checkin[]): string {
   return ['date,fullness,energy,focus,training,skipped,saved_at', ...rows].join('\n') + '\n';
 }
 
+/** Same surface as export.ts; a browser download is the student's own file, not the app's to delete. */
+export function deleteExportFile(): void {}
+
 export async function exportCheckins(checkins: readonly Checkin[]): Promise<boolean> {
   const real = checkins.filter((c) => !c.isDemo);
   if (real.length === 0 || typeof document === 'undefined') return false;

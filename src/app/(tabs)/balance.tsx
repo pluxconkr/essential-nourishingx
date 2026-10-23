@@ -52,7 +52,7 @@ export default function BalanceScreen() {
       )}
 
       {b.state === 'attention' ? (
-        <AttentionCard phoneDisplay={school.healthCenter.phoneDisplay} phone={school.healthCenter.phone} firm={b.attentionStreak >= 3} onReach={() => router.push('/health')} messageText={t('attention.messageText')} />
+        <AttentionCard phoneDisplay={school.healthCenter.phoneDisplay} phone={school.healthCenter.phone} days={b.attentionStreak} firm={b.attentionStreak >= 3} onReach={() => router.push('/health')} messageText={t('attention.messageText')} />
       ) : null}
 
       <SectionHeader>{t('balance.from.title')}</SectionHeader>

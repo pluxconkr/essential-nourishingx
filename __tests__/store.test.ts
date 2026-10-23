@@ -22,8 +22,28 @@ describe('store', () => {
   test('consent stores prefs and schedules the one reminder', async () => {
     await actions.consent(15, 0, true);
     expect(getState().prefs.consentedAt).not.toBeNull();
+    expect(getState().prefs.notificationsEnabled).toBe(true);
     expect(scheduleReminder).toHaveBeenCalledTimes(1);
     expect(scheduleReminder).toHaveBeenCalledWith(15, 0);
+  });
+  test('consent with the permission denied leaves reminders off (Your data no longer promises one)', async () => {
+    (scheduleReminder as jest.Mock).mockResolvedValueOnce(null);
+    expect(await actions.consent(15, 0, true)).toBe(false);
+    expect(getState().prefs.consentedAt).not.toBeNull();
+    expect(getState().prefs.notificationsEnabled).toBe(false);
+  });
+  test('a reminder time change that cannot be scheduled turns reminders off', async () => {
+    await actions.consent(15, 0, true);
+    (scheduleReminder as jest.Mock).mockResolvedValueOnce(null);
+    expect(await actions.setReminderTime(16, 30)).toBe(false);
+    expect(getState().prefs).toMatchObject({ reminderHour: 16, reminderMinute: 30, notificationsEnabled: false });
+  });
+  test('real check-ins queue for upload; demo check-ins never do', () => {
+    actions.saveCheckin({ fullness: 3, energy: 3, focus: 3, training: 'light', skipped: 'none' }, 19, today);
+    expect(kv.get(KEYS.syncQueue)).toEqual([today]);
+    actions.loadDemo('watch', today);
+    actions.saveCheckin({ fullness: 5, energy: 5, focus: 5, training: 'none', skipped: 'none' }, 12, '2027-10-09');
+    expect(kv.get(KEYS.syncQueue)).toEqual([today]);
   });
   test('a second check-in on the same day overwrites the first; timing is recorded', () => {
     actions.saveCheckin({ fullness: 3, energy: 3, focus: 3, training: 'light', skipped: 'none' }, 19, today);
@@ -51,7 +71,7 @@ describe('store', () => {
   test('delete everything leaves only the schema key and cancels the reminder', async () => {
     await actions.consent(15, 0, true);
     actions.saveCheckin({ fullness: 3, energy: 3, focus: 3, training: 'light', skipped: 'none' }, 19, today);
-    await actions.deleteEverything();
+    expect(await actions.deleteEverything()).toBe('done');
     expect(kv.keys().sort()).toEqual([KEYS.schema]);
     expect(cancelReminder).toHaveBeenCalled();
     expect(getState().prefs.consentedAt).toBeNull();

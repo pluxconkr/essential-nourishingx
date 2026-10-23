@@ -26,17 +26,24 @@ export default function CheckinScreen() {
   const todayCheckin = useTodayCheckin();
   const demo = useDemoScenario();
   const [draft, setDraft] = useState<Draft>(() => fromRecord(todayCheckin));
+  const [draftFrom, setDraftFrom] = useState(todayCheckin);
   const [startedAt, setStartedAt] = useState(() => Date.now());
   const [running, setRunning] = useState(true);
 
-  // Timer starts when the screen comes into view; answers pre-fill from today's record.
+  // Answers pre-fill from today's record and follow it when it changes (a save, a demo week, midnight).
+  // Switching tabs keeps a half-filled draft.
+  if (draftFrom !== todayCheckin) {
+    setDraftFrom(todayCheckin);
+    setDraft(fromRecord(todayCheckin));
+  }
+
+  // Timer starts when the screen comes into view.
   useFocusEffect(
     useCallback(() => {
       setStartedAt(Date.now());
-      setDraft(fromRecord(todayCheckin));
       setRunning(true);
       return () => setRunning(false);
-    }, [todayCheckin]),
+    }, []),
   );
 
   const answered = (['fullness', 'energy', 'focus', 'training', 'skipped'] as const).filter((k) => draft[k] !== null).length;

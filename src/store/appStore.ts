@@ -1,13 +1,16 @@
 /**
  * Zero-dependency app store on useSyncExternalStore. Hydration is synchronous from local storage, so the
- * first frame shows real data. Writes go to storage first, then notify. No network anywhere.
+ * first frame shows real data. Writes go to storage first, then notify. The network is used only after
+ * consent, through src/services/cloud.ts (check-in sync, meal photos); the phone works fully without it.
  */
 import { useSyncExternalStore } from 'react';
 
-import { checkinRepo, demoBackupRepo, initStorage, prefsRepo, timingRepo, wipeStorage } from '@/data/repos';
+import { checkinRepo, demoBackupRepo, initStorage, mealRepo, prefsRepo, syncQueueRepo, timingRepo, wipeStorage } from '@/data/repos';
 import { scenarioCheckins } from '@/domain/demo';
-import { dateKey } from '@/domain/time';
-import type { Checkin, DemoScenario, Prefs, Rating, Skipped, Training } from '@/domain/types';
+import { addDays, dateKey } from '@/domain/time';
+import type { Checkin, DemoScenario, Meal, MealRecord, Prefs, Rating, Skipped, Training } from '@/domain/types';
+import { analyzeMeal as analyzeOnServer, connect, deleteCloudAccount, deleteMeal as deleteOnServer, fetchMeals, uploadCheckins, type AnalyzeResult } from '@/services/cloud';
+import { deleteExportFile } from '@/services/export';
 import { cancelReminder, scheduleReminder } from '@/services/notifications';
 
 export interface AppState {
@@ -15,11 +18,12 @@ export interface AppState {
   prefs: Prefs;
   checkins: Checkin[];
   timing: number[];
+  meals: MealRecord[];
 }
 
 type Listener = () => void;
 
-let state: AppState = { hydrated: false, prefs: prefsRepo.get(), checkins: [], timing: [] };
+let state: AppState = { hydrated: false, prefs: prefsRepo.get(), checkins: [], timing: [], meals: [] };
 const listeners = new Set<Listener>();
 
 function emit() {
@@ -42,7 +46,7 @@ export function subscribe(l: Listener): () => void {
 
 export function hydrate(): AppState {
   initStorage();
-  state = { hydrated: true, prefs: prefsRepo.get(), checkins: checkinRepo.getAll(), timing: timingRepo.getAll() };
+  state = { hydrated: true, prefs: prefsRepo.get(), checkins: checkinRepo.getAll(), timing: timingRepo.getAll(), meals: mealRepo.getAll() };
   emit();
   return state;
 }
@@ -59,18 +63,25 @@ export interface CheckinInput {
   skipped: Skipped;
 }
 
+/** Meal photos older than this are not fetched; the rules read 7 days and the 30-day history at most. */
+const MEAL_DAYS = 31;
+let syncing: Promise<void> | null = null;
+
 export const actions = {
-  /** Consent recorded; the one daily reminder is scheduled when enabled. */
-  async consent(reminderHour: number, reminderMinute: number, notificationsEnabled: boolean): Promise<void> {
-    const prefs: Prefs = { ...state.prefs, consentedAt: new Date().toISOString(), reminderHour, reminderMinute, notificationsEnabled };
+  /** Consent recorded; the one daily reminder is scheduled when enabled. The switch only stays on if it was. */
+  async consent(reminderHour: number, reminderMinute: number, notificationsEnabled: boolean): Promise<boolean> {
+    const scheduled = notificationsEnabled ? (await scheduleReminder(reminderHour, reminderMinute)) !== null : false;
+    const prefs: Prefs = { ...state.prefs, consentedAt: new Date().toISOString(), reminderHour, reminderMinute, notificationsEnabled: scheduled };
     setState({ prefs: prefsRepo.set(prefs) });
-    if (notificationsEnabled) await scheduleReminder(reminderHour, reminderMinute);
+    void actions.sync();
+    return scheduled || !notificationsEnabled;
   },
 
-  async setReminderTime(hour: number, minute: number): Promise<void> {
-    const prefs = prefsRepo.set({ ...state.prefs, reminderHour: hour, reminderMinute: minute });
+  async setReminderTime(hour: number, minute: number): Promise<boolean> {
+    const ok = state.prefs.notificationsEnabled ? (await scheduleReminder(hour, minute)) !== null : true;
+    const prefs = prefsRepo.set({ ...state.prefs, reminderHour: hour, reminderMinute: minute, notificationsEnabled: state.prefs.notificationsEnabled && ok });
     setState({ prefs });
-    if (prefs.notificationsEnabled) await scheduleReminder(hour, minute);
+    return ok;
   },
 
   async setNotificationsEnabled(enabled: boolean): Promise<boolean> {
@@ -82,17 +93,54 @@ export const actions = {
     return ok;
   },
 
-  /** Save today's five answers. A second save the same day overwrites the first. */
+  /** Save today's five answers. A second save the same day overwrites the first. Real check-ins queue for upload. */
   saveCheckin(input: CheckinInput, durationS: number | null, today: string = dateKey()): Checkin {
     const demo = state.prefs.demo !== 'live';
     const record: Checkin = { date: today, ...input, savedAt: new Date().toISOString(), durationS, ...(demo ? { isDemo: true as const } : {}) };
     const checkins = checkinRepo.upsert(record);
     const timing = durationS != null && !demo ? timingRepo.add(durationS) : state.timing;
     setState({ checkins, timing });
+    if (!demo) {
+      syncQueueRepo.add(today);
+      void actions.sync();
+    }
     return record;
   },
 
-  /** Load a demo week (labelled, never exported) or return to live records. */
+  /** Uploads queued check-ins and refreshes the student's meal analyses. Safe to call any time; never throws. */
+  sync(): Promise<void> {
+    if (state.prefs.consentedAt === null) return Promise.resolve();
+    syncing ??= (async () => {
+      try {
+        if (!(await connect())) return;
+        const queued = new Set(syncQueueRepo.get());
+        if (queued.size && state.prefs.demo === 'live') syncQueueRepo.remove(await uploadCheckins(state.checkins.filter((c) => queued.has(c.date))));
+        const meals = await fetchMeals(addDays(dateKey(), -MEAL_DAYS));
+        if (meals) setState({ meals: mealRepo.replaceAll(meals) });
+      } catch {
+        /* offline: the queue stays for the next try */
+      } finally {
+        syncing = null;
+      }
+    })();
+    return syncing;
+  },
+
+  /** One meal photo, already resized on the phone. The result is kept as the student's own row. */
+  async analyzeMeal(image: string, meal: Meal, day: string = dateKey()): Promise<AnalyzeResult> {
+    const result = await analyzeOnServer({ image, mediaType: 'image/jpeg', meal, day });
+    if (result.status === 'ok') setState({ meals: mealRepo.add(result.record) });
+    return result;
+  },
+
+  /** Removes one analysed meal, on the server first so the next sync cannot bring it back. */
+  async deleteMeal(id: string): Promise<boolean> {
+    if (!(await deleteOnServer(id))) return false;
+    setState({ meals: mealRepo.remove(id) });
+    return true;
+  },
+
+  /** Load a demo week (labelled, never exported or uploaded) or return to live records. */
   loadDemo(scenario: DemoScenario, today: string = dateKey()): void {
     const current = state.prefs.demo;
     if (scenario === current) return;
@@ -106,10 +154,17 @@ export const actions = {
     setState({ checkins: checkinRepo.replaceAll(scenarioCheckins(scenario, today)), prefs: prefsRepo.set({ ...state.prefs, demo: scenario }) });
   },
 
-  /** Remove every stored key, cancel the reminder, return to the consent screen. */
-  async deleteEverything(): Promise<void> {
+  /**
+   * Remove the server account and its rows, then every stored key, the last export file and the reminder.
+   * If the server cannot be reached nothing is deleted: wiping the phone first would lose the session needed
+   * to delete the server copy later.
+   */
+  async deleteEverything(): Promise<'done' | 'offline'> {
+    if (!(await deleteCloudAccount().catch(() => false))) return 'offline';
     await cancelReminder();
+    deleteExportFile();
     wipeStorage();
-    setState({ prefs: prefsRepo.get(), checkins: [], timing: [] });
+    setState({ prefs: prefsRepo.get(), checkins: [], timing: [], meals: [] });
+    return 'done';
   },
 };

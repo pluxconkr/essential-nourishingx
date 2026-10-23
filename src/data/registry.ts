@@ -9,6 +9,10 @@ export const KEYS = {
   timing: 'timing',
   reminder: 'reminder',
   demoBackup: 'demoBackup',
+  /** Dates of check-ins not yet uploaded (Supabase sync). */
+  syncQueue: 'syncQueue',
+  /** The student's own analysed meal photos, cached from Supabase (the photos themselves are never kept). */
+  meals: 'meals',
 } as const;
 
 export type StoreKey = (typeof KEYS)[keyof typeof KEYS];

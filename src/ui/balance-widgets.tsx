@@ -130,11 +130,11 @@ export function ActionRow({ n, action }: { n: number; action: string }) {
   );
 }
 
-export function AttentionCard({ phoneDisplay, phone, firm, onReach, messageText }: { phoneDisplay: string; phone: string; firm: boolean; onReach: () => void; messageText: string }) {
+export function AttentionCard({ phoneDisplay, phone, days, firm, onReach, messageText }: { phoneDisplay: string; phone: string; /** Consecutive days at Needs attention, for the firm wording. */ days: number; firm: boolean; onReach: () => void; messageText: string }) {
   return (
     <Card tone="crimson" testID="attention-card">
       <SectionLabel style={{ color: colors.crimsonInk }}>{t('attention.title')}</SectionLabel>
-      <Subhead style={{ color: colors.crimsonInk, marginTop: 6 }}>{t(firm ? 'attention.firm' : 'attention.body', { phone: phoneDisplay })}</Subhead>
+      <Subhead style={{ color: colors.crimsonInk, marginTop: 6 }}>{t(firm ? 'attention.firm' : 'attention.body', { phone: phoneDisplay, n: days })}</Subhead>
       <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
         <Pressable onPress={() => void Linking.openURL(`tel:${phone}`)} accessibilityRole="button" accessibilityLabel={`${t('health.call')} ${t('health.phone')}`} style={({ pressed }) => [styles.smallBtn, { backgroundColor: tint }, pressed && { opacity: 0.6 }]}>
           <Icon name="call" size={16} color={colors.white} />

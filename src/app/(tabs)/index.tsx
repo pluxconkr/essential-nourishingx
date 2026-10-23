@@ -1,17 +1,18 @@
 /**
- * Screen 1 · Home. Today's menu, 7-day averages, one suggestion, the check-in entry point, the week strip.
- * Dining content leads; the health framing stays quiet. Averages are the student's own inputs.
+ * Screen 1 · Home. Today's menu, 7-day averages, one suggestion, the check-in entry point, the week strip,
+ * today's meal photos (when this build has Supabase). Dining content leads; the health framing stays quiet.
+ * Averages are the student's own inputs.
  */
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 
-import { greeting, longDate } from '@/domain/format';
+import { greeting, longDate, roundKcal } from '@/domain/format';
 import { addDays } from '@/domain/time';
 import { t } from '@/i18n';
 import { menuForToday } from '@/services/menu';
-import { school, useBalance, useCheckins, useToday, useTodayCheckin } from '@/store/derived';
+import { cloudEnabled, school, useBalance, useCheckins, useMeals, useToday, useTodayCheckin } from '@/store/derived';
 import { MenuCard, ScoreBox, Suggestion, WeekStrip } from '@/ui/balance-widgets';
-import { Badge, Button, Card, Footnote, SectionHeader, SectionFooter, Subhead } from '@/ui/primitives';
+import { Badge, Button, Card, Cell, Footnote, SectionHeader, Subhead } from '@/ui/primitives';
 import { Screen } from '@/ui/Screen';
 
 export default function HomeScreen() {
@@ -21,6 +22,7 @@ export default function HomeScreen() {
   const balance = useBalance();
   const checkins = useCheckins();
   const todayCheckin = useTodayCheckin();
+  const todayMeals = useMeals().filter((m) => m.date === today);
   const menu = menuForToday(today, hour);
   const d = balance.derived;
 
@@ -30,6 +32,8 @@ export default function HomeScreen() {
   const num = (x: number) => (d.n === 0 ? '–' : x.toFixed(1));
 
   const suggestLabel = balance.state === 'watch' || balance.state === 'attention' ? t('home.suggest.label.try') : t('home.suggest.label.today');
+  // "Check in today" would be wrong once today's check-in exists.
+  const suggest = balance.state === 'nodata' && todayCheckin ? 'nodata.done' : balance.state;
   const yesterdayMissing = checkins.length > 0 && !checkins.some((c) => c.date === addDays(today, -1));
 
   return (
@@ -50,7 +54,7 @@ export default function HomeScreen() {
         <ScoreBox label={t('home.score.fullness')} value={num(d.fullMean)} caption={fullnessCaption} />
       </View>
 
-      <Suggestion label={suggestLabel} heading={t(`home.suggest.${balance.state}.h`)} body={t(`home.suggest.${balance.state}.p`, { dinner: school.dining.dinner })} />
+      <Suggestion label={suggestLabel} heading={t(`home.suggest.${suggest}.h`)} body={t(`home.suggest.${suggest}.p`, { dinner: school.dining.dinner })} />
 
       <SectionHeader>{t('home.today.title')}</SectionHeader>
       <Card>
@@ -73,7 +77,24 @@ export default function HomeScreen() {
         <Footnote style={{ marginTop: 10 }}>{t('home.week.footnote')}</Footnote>
         <Button title={t('home.week.open')} variant="ghost" onPress={() => router.navigate('/balance')} style={{ marginTop: 12 }} />
       </Card>
-      <SectionFooter>{t('data.mode.local')}</SectionFooter>
+
+      {cloudEnabled ? (
+        <>
+          <SectionHeader>{t('home.meals.title')}</SectionHeader>
+          <Card padded={false} testID="home-meals">
+            {todayMeals.length === 0 ? (
+              <Cell icon="camera" title={t('home.meals.empty')} />
+            ) : (
+              todayMeals.map((m) => <Cell key={m.id} icon="meals" title={t('home.meals.line', { meal: t(`meal.slot.${m.meal}`), kcal: roundKcal(m.kcal) })} subtitle={m.items.map((i) => i.name).join(' · ')} />)
+            )}
+            <Cell icon="camera" title={t('home.meals.add')} accessory="chevron" onPress={() => router.push('/meal')} testID="home-meal" last />
+          </Card>
+        </>
+      ) : null}
+
+      <Card padded={false}>
+        <Cell icon="data" title={t('data.title')} subtitle={t(cloudEnabled ? 'data.mode.cloud' : 'data.mode.local')} accessory="chevron" onPress={() => router.push('/data')} testID="home-data" last />
+      </Card>
     </Screen>
   );
 }

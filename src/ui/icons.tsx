@@ -35,6 +35,9 @@ const ICONS = {
   message: 'chatbubble-ellipses-outline',
   time: 'time-outline',
   lock: 'lock-closed-outline',
+  camera: 'camera-outline',
+  image: 'images-outline',
+  data: 'folder-open-outline',
 } as const satisfies Record<string, IonName>;
 
 export type IconName = keyof typeof ICONS;

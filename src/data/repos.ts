@@ -4,7 +4,7 @@
  */
 import { z } from 'zod';
 
-import type { Checkin, DemoScenario, Prefs } from '@/domain/types';
+import type { Checkin, DemoScenario, MealRecord, Prefs } from '@/domain/types';
 
 import { kv } from './db';
 import { KEYS, REGISTERED_KEYS, SCHEMA_VERSION } from './registry';
@@ -120,6 +120,77 @@ export const demoBackupRepo = {
   set(list: Checkin[] | null): void {
     if (list) kv.set(KEYS.demoBackup, list);
     else kv.remove(KEYS.demoBackup);
+  },
+};
+
+const Confidence = z.enum(['low', 'medium', 'high']);
+const MealRecordSchema = z.object({
+  id: z.string(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  meal: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
+  items: z.array(
+    z.object({
+      name: z.string(),
+      portion: z.string(),
+      grams: z.number(),
+      kcal: z.number(),
+      protein_g: z.number(),
+      carbs_g: z.number(),
+      fat_g: z.number(),
+      fiber_g: z.number(),
+      group: z.string(),
+      confidence: Confidence,
+    }),
+  ),
+  kcal: z.number(),
+  kcalLow: z.number(),
+  kcalHigh: z.number(),
+  protein_g: z.number(),
+  carbs_g: z.number(),
+  fat_g: z.number(),
+  fiber_g: z.number(),
+  groups: z.array(z.string()),
+  uncertain: z.array(z.string()),
+  tier: z.enum(['haiku', 'opus', 'fable']),
+  difficulty: z.enum(['easy', 'medium', 'hard']),
+  confidence: Confidence,
+  createdAt: z.string(),
+});
+
+/** Analysed meal photos, newest first; invalid rows are dropped like invalid check-ins. */
+export const mealRepo = {
+  getAll(): MealRecord[] {
+    const raw = kv.get<unknown>(KEYS.meals);
+    if (!Array.isArray(raw)) return [];
+    return raw.flatMap((r) => {
+      const p = MealRecordSchema.safeParse(r);
+      return p.success ? [p.data as MealRecord] : [];
+    });
+  },
+  replaceAll(list: MealRecord[]): MealRecord[] {
+    const next = [...list].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    kv.set(KEYS.meals, next);
+    return next;
+  },
+  add(m: MealRecord): MealRecord[] {
+    return this.replaceAll([m, ...this.getAll().filter((x) => x.id !== m.id)]);
+  },
+  remove(id: string): MealRecord[] {
+    return this.replaceAll(this.getAll().filter((x) => x.id !== id));
+  },
+};
+
+/** Dates whose check-in still has to reach Supabase. */
+export const syncQueueRepo = {
+  get(): string[] {
+    const raw = kv.get<unknown>(KEYS.syncQueue);
+    return Array.isArray(raw) ? raw.filter((d): d is string => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) : [];
+  },
+  add(date: string): void {
+    kv.set(KEYS.syncQueue, [...new Set([...this.get(), date])]);
+  },
+  remove(dates: readonly string[]): void {
+    kv.set(KEYS.syncQueue, this.get().filter((d) => !dates.includes(d)));
   },
 };
 

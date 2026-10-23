@@ -3,7 +3,7 @@
  */
 import * as Haptics from 'expo-haptics';
 import { useEffect, useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Switch, Text, View, type PressableProps, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
+import { Alert, Platform, Pressable, StyleSheet, Switch, Text, View, type PressableProps, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 
 import { Icon, type IconName } from './icons';
 import { CELL_PAD, MIN_TAP, colors, radius, tabular, text, tint } from './theme';
@@ -147,6 +147,18 @@ export function Callout({ icon, title, children, tone = 'soft' }: { icon: IconNa
       </View>
     </Card>
   );
+}
+
+/** Confirms a destructive action. React Native Web's Alert.alert does nothing, so the web asks with the browser's dialog. */
+export function confirmDestructive({ title, body, cancel, action, onConfirm }: { title: string; body: string; cancel: string; action: string; onConfirm: () => void }) {
+  if (Platform.OS === 'web') {
+    if (window.confirm(`${title}\n\n${body}`)) onConfirm();
+    return;
+  }
+  Alert.alert(title, body, [
+    { text: cancel, style: 'cancel' },
+    { text: action, style: 'destructive', onPress: onConfirm },
+  ]);
 }
 
 // ---------- Toast ----------

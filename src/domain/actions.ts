@@ -1,7 +1,9 @@
 /**
  * Actions: reviewed templates selected by clause, max 3, always behaviours available in this dining hall,
  * no numeric targets (spec §7). Templates live in assets/data/school.json so another school changes
- * the hall's behaviours without touching code (spec §20).
+ * the hall's behaviours without touching code (spec §20). The nutrition behind each template (carbohydrate +
+ * protein after training, protein at every main meal, breakfast before class) is cited in docs/sources.md,
+ * "Guidance shown to students".
  */
 import type { Clause, School, StateWord } from './types.ts';
 

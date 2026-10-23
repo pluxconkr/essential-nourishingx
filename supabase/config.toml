@@ -421,3 +421,6 @@ enabled = true
 # withSupabase({ auth: ['user', 'secret'] }) authenticates every request instead.
 [functions.analyze-meal]
 verify_jwt = false
+
+[functions.delete-me]
+verify_jwt = false

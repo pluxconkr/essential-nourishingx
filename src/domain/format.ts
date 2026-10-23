@@ -16,3 +16,6 @@ export function shortDate(key: string): string {
 export function greeting(hour: number): string {
   return t(`greeting.${daypart(hour)}`);
 }
+
+/** Meal energy to the nearest 10 kcal: a photo estimate is off by about 40 % on average (docs/ai-router.md), so finer digits would be false precision. */
+export const roundKcal = (kcal: number): number => Math.round(kcal / 10) * 10;

@@ -116,6 +116,20 @@ try {
   r = await admin.from('checkins').select('day').eq('user_id', idA);
   check("deleting a student removes the student's rows", !r.error && r.data.length === 0, JSON.stringify(r.data ?? r.error?.message));
 
+  // delete-me ("Delete everything"): only the anonymous student themself; staff and session-less callers are refused
+  const status = (res) => String(res.error?.context?.status ?? (res.error ? res.error.message : 'no error'));
+  r = await staff.functions.invoke('delete-me', { body: {} });
+  check('staff cannot use delete-me', status(r) === '403', status(r));
+  r = await anon.functions.invoke('delete-me', { body: {} });
+  check('delete-me refuses a caller without a session', status(r) === '401', status(r));
+  await b.from('checkins').insert(row());
+  r = await b.functions.invoke('delete-me', { body: {} });
+  check('a student deletes their own account with delete-me', !r.error && r.data?.status === 'deleted', status(r));
+  r = await admin.from('checkins').select('day').eq('user_id', idB);
+  const gone = await admin.auth.admin.getUserById(idB);
+  check('delete-me removes the rows and the anonymous user', !r.error && r.data.length === 0 && Boolean(gone.error), JSON.stringify(r.data ?? r.error?.message));
+  if (gone.error) created.splice(created.indexOf(idB), 1);
+
   // exact privileges: nothing beyond what the policies need (catches default-ACL grants such as TRUNCATE)
   if (process.env.SUPABASE_ACCESS_TOKEN) {
     const ref = new globalThis.URL(URL).host.split('.')[0];

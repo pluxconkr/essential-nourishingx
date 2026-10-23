@@ -23,6 +23,45 @@ export interface MealLog {
   carbs_g: number;
 }
 
+export type Confidence = 'low' | 'medium' | 'high';
+
+/** One food in an analysed photo, as the analyze-meal Edge Function validated it (estimates). */
+export interface MealItem {
+  name: string;
+  portion: string;
+  grams: number;
+  kcal: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  fiber_g: number;
+  group: string;
+  confidence: Confidence;
+}
+
+/** A student's analysed meal photo (the photo itself is never kept). Mirrors public.meal_analyses. */
+export interface MealRecord {
+  id: string;
+  date: string;
+  meal: Meal;
+  items: MealItem[];
+  kcal: number;
+  kcalLow: number;
+  kcalHigh: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  fiber_g: number;
+  groups: string[];
+  uncertain: string[];
+  tier: 'haiku' | 'opus' | 'fable';
+  difficulty: 'easy' | 'medium' | 'hard';
+  confidence: Confidence;
+  createdAt: string;
+}
+
+export const toMealLog = (r: MealRecord): MealLog => ({ date: r.date, meal: r.meal, protein_g: r.protein_g, carbs_g: r.carbs_g });
+
 export interface Checkin {
   /** Local calendar day, YYYY-MM-DD. One record per day; a second save overwrites. */
   date: string;

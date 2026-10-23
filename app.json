@@ -37,7 +37,15 @@
         }
       ],
       "expo-status-bar",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "NourishingX uses the camera only when you choose to photograph a meal. The photo is analysed and never stored.",
+          "photosPermission": "NourishingX opens your photos only when you choose a meal photo. The photo is analysed and never stored.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

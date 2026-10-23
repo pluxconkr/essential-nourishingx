@@ -10,25 +10,38 @@ import { reminderRepo } from '@/data/repos';
 import { t } from '@/i18n';
 
 export const CHANNEL_ID = 'nourishingx';
+/** One fixed id for the one reminder, so a cancel always finds it, whichever call scheduled it. */
+export const REMINDER_ID = 'nourishingx-daily-reminder';
 let configured = false;
 
 export async function configureNotifications(): Promise<void> {
   if (configured) return;
-  configured = true;
   try {
     Notifications.setNotificationHandler({
       handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: false, shouldSetBadge: false }),
     });
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
-        name: 'NourishingX',
+        name: t('notif.channel'),
         importance: Notifications.AndroidImportance.DEFAULT,
         vibrationPattern: [0, 150],
       });
     }
+    configured = true;
   } catch {
-    /* notifications unavailable (e.g. simulator restrictions) */
+    /* notifications unavailable (e.g. simulator restrictions); the next call tries again */
   }
+}
+
+/**
+ * Reminder changes run one at a time. Two quick taps on the time stepper used to overlap and leave two DAILY
+ * reminders scheduled, one of which survived "Delete everything" (reproduced with mocked expo-notifications).
+ */
+let pending: Promise<unknown> = Promise.resolve();
+function oneAtATime<T>(fn: () => Promise<T>): Promise<T> {
+  const run = pending.then(fn, fn);
+  pending = run.catch(() => undefined);
+  return run;
 }
 
 export async function ensurePermission(): Promise<boolean> {
@@ -43,37 +56,46 @@ export async function ensurePermission(): Promise<boolean> {
   }
 }
 
-export async function cancelReminder(): Promise<void> {
-  const existing = reminderRepo.get();
+async function cancelNow(): Promise<void> {
+  const stored = reminderRepo.get();
   reminderRepo.set(null);
-  if (!existing) return;
-  try {
-    await Notifications.cancelScheduledNotificationAsync(existing.id);
-  } catch {
-    /* ignore */
+  // The stored id covers reminders scheduled before REMINDER_ID existed.
+  for (const id of new Set([REMINDER_ID, stored?.id].filter((x): x is string => Boolean(x)))) {
+    try {
+      await Notifications.cancelScheduledNotificationAsync(id);
+    } catch {
+      /* nothing scheduled under this id */
+    }
   }
 }
 
+export function cancelReminder(): Promise<void> {
+  return oneAtATime(cancelNow);
+}
+
 /** Replace the one scheduled reminder. Returns the notification id, or null when permission is missing. */
-export async function scheduleReminder(hour: number, minute: number): Promise<string | null> {
-  await cancelReminder();
-  await configureNotifications();
-  if (!(await ensurePermission())) return null;
-  try {
-    const id = await Notifications.scheduleNotificationAsync({
-      content: { title: t('notif.title'), body: t('notif.body'), data: { url: '/checkin' } },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour,
-        minute,
-        ...(Platform.OS === 'android' ? { channelId: CHANNEL_ID } : {}),
-      },
-    });
-    reminderRepo.set({ id, hour, minute });
-    return id;
-  } catch {
-    return null;
-  }
+export function scheduleReminder(hour: number, minute: number): Promise<string | null> {
+  return oneAtATime(async () => {
+    await cancelNow();
+    await configureNotifications();
+    if (!(await ensurePermission())) return null;
+    try {
+      const id = await Notifications.scheduleNotificationAsync({
+        identifier: REMINDER_ID,
+        content: { title: t('notif.title'), body: t('notif.body'), data: { url: '/checkin' } },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
+          hour,
+          minute,
+          ...(Platform.OS === 'android' ? { channelId: CHANNEL_ID } : {}),
+        },
+      });
+      reminderRepo.set({ id, hour, minute });
+      return id;
+    } catch {
+      return null;
+    }
+  });
 }
 
 /** Route a tap on the reminder to the Check-in tab. Returns an unsubscribe. */

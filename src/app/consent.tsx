@@ -1,16 +1,17 @@
-/** Consent before anything is stored: six plain sentences, the reminder time, I understand / Not now. */
+/** Consent before anything is stored: six plain sentences (seven when meal photos exist), the reminder time, I understand / Not now. */
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import { formatClock } from '@/domain/time';
 import { t } from '@/i18n';
 import { actions, useAppState } from '@/store/appStore';
-import { Button, Card, Cell, SectionFooter, SectionHeader, Stepper, Title, Toggle } from '@/ui/primitives';
+import { cloudEnabled } from '@/store/derived';
+import { Button, Card, Cell, SectionFooter, SectionHeader, Stepper, Title, Toggle, showToast } from '@/ui/primitives';
 import { Screen } from '@/ui/Screen';
 import { colors } from '@/ui/theme';
 
-const SENTENCES = ['consent.s1', 'consent.s2', 'consent.s3', 'consent.s4', 'consent.s5', 'consent.s6'] as const;
+const SENTENCES = ['consent.s1', 'consent.s2', 'consent.s3', 'consent.s4', 'consent.s5', 'consent.s6', ...(cloudEnabled ? (['consent.s7'] as const) : [])] as const;
 
 export default function ConsentScreen() {
   const router = useRouter();
@@ -23,7 +24,8 @@ export default function ConsentScreen() {
   const accept = async () => {
     if (busy) return;
     setBusy(true);
-    await actions.consent(hour, minute, reminders);
+    // The web build has no reminders at all, so only a phone says its notification setting is off.
+    if (!(await actions.consent(hour, minute, reminders)) && Platform.OS !== 'web') showToast(t('data.reminder.denied'));
     router.replace('/');
   };
 

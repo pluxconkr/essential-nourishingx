@@ -29,3 +29,11 @@ export const inventory: Record<Key, InventoryRow> = Object.fromEntries(
  * and the list of things the app never collects. Nothing else may.
  */
 export const FORBIDDEN_ALLOWLIST: readonly Key[] = ['safety.disclaimer', 'consent.s6', 'data.never.body'];
+
+/**
+ * Meal-estimate strings (ADR 0001: students see calorie and macro estimates for analysed meals). They may say
+ * "kcal" and name the nutrient "fat"; with those two words removed they must pass every rejection test, so no
+ * target, weight or body word can ride along.
+ */
+export const ESTIMATE_ALLOWLIST: readonly Key[] = ['home.meals.line', 'data.stored.meals', 'data.meals.line', 'meal.result.energy', 'meal.result.macros', 'meal.result.item'];
+export const ESTIMATE_WORDS = /\b(kcal|fat)\b/gi;

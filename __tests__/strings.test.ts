@@ -6,7 +6,7 @@
 import schoolJson from '@/assets/data/school.json';
 import type { School } from '@/domain/types';
 import { en, type Key } from '@/i18n/en';
-import { FORBIDDEN_ALLOWLIST, inventory } from '@/i18n/inventory';
+import { ESTIMATE_ALLOWLIST, ESTIMATE_WORDS, FORBIDDEN_ALLOWLIST, inventory } from '@/i18n/inventory';
 
 const school = schoolJson as unknown as School;
 
@@ -38,12 +38,13 @@ describe('rejection tests', () => {
     const offenders: string[] = [];
     for (const k of studentKeys) {
       if (FORBIDDEN_ALLOWLIST.includes(k)) continue;
-      for (const { group, re } of FORBIDDEN) if (re.test(en[k])) offenders.push(`${k} (${group}): "${en[k]}"`);
+      const s = ESTIMATE_ALLOWLIST.includes(k) ? en[k].replace(ESTIMATE_WORDS, '') : en[k];
+      for (const { group, re } of FORBIDDEN) if (re.test(s)) offenders.push(`${k} (${group}): "${en[k]}"`);
     }
     expect(offenders).toEqual([]);
   });
   test('allow-listed IDs do contain a forbidden word (otherwise the allow-list is stale)', () => {
-    for (const k of FORBIDDEN_ALLOWLIST) expect(FORBIDDEN.some(({ re }) => re.test(en[k]))).toBe(true);
+    for (const k of [...FORBIDDEN_ALLOWLIST, ...ESTIMATE_ALLOWLIST]) expect(FORBIDDEN.some(({ re }) => re.test(en[k]))).toBe(true);
   });
   test('no percentage sign and no probability anywhere a student reads', () => {
     for (const k of studentKeys) expect(en[k]).not.toMatch(/%/);

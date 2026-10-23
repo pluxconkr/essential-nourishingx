@@ -35,6 +35,31 @@ energy as 4·protein + 4·carbohydrate + 9·fat − 2·fibre.
 (https://www.myplate.gov/eat-healthy/what-is-myplate). NourishingX adds fats and oils, sweets, drinks and mixed
 dishes so every item on a dining-hall plate has a group.
 
+## Guidance shown to students
+
+The suggestions on Home (`home.suggest.*` in `src/i18n/en.ts`) and the actions on Balance
+(`actionsByClause` in `assets/data/school.json`) are everyday dining-hall behaviours. Each one rests on the
+sources below; none gives a number to eat. Citations checked against PubMed on 2026-10-24.
+
+| Guidance | Basis |
+|---|---|
+| A carbohydrate + protein snack after practice; chocolate milk and a banana as the easy option | Post-exercise carbohydrate with protein helps refill glycogen and repair muscle (Kerksick 2017; Thomas, Erdman & Burke 2016). In a small trial (nine trained cyclists), chocolate milk between two hard sessions gave longer endurance in the second than a carbohydrate recovery drink, and matched a sports drink (Karp 2006). |
+| A protein option at lunch and dinner; eggs or yogurt at breakfast | Spreading protein over the day's meals, about 20–40 g each, is the sport-nutrition recommendation (Jäger 2017); the teen RDA alone is about 15–17 g per meal (DRI, see `docs/thresholds.md`). |
+| Rice, pasta or bread at lunch and dinner on heavy training days; a banana before practice | Carbohydrate needs rise with training load (Thomas, Erdman & Burke 2016; Kerksick 2017). |
+| The grab-and-go breakfast station; fruit from the exit line | A review of 36 studies found mainly positive effects of breakfast on on-task behaviour in class, and more frequent breakfast was consistently linked with better school performance; part of that link comes from other factors such as family income (Adolphus, Lawton & Dye 2013). |
+| Talk to a trusted adult or the Health Center | Not a nutrition claim: the app's safety rule (spec §11). The ACSM statement also advises referring athletes to a registered dietitian for a personal plan. |
+
+- Kerksick CM, et al. International society of sports nutrition position stand: nutrient timing.
+  *J Int Soc Sports Nutr* 2017;14:33. PMID 28919842.
+- Thomas DT, Erdman KA, Burke LM. American College of Sports Medicine Joint Position Statement. Nutrition and
+  Athletic Performance. *Med Sci Sports Exerc* 2016;48(3):543-68. PMID 26891166.
+- Karp JR, Johnston JD, Tecklenburg S, Mickleborough TD, Fly AD, Stager JM. Chocolate milk as a post-exercise
+  recovery aid. *Int J Sport Nutr Exerc Metab* 2006;16(1):78-91. PMID 16676705.
+- Jäger R, et al. International Society of Sports Nutrition Position Stand: protein and exercise.
+  *J Int Soc Sports Nutr* 2017;14:20. PMID 28642676.
+- Adolphus K, Lawton CL, Dye L. The effects of breakfast on behavior and academic performance in children and
+  adolescents. *Front Hum Neurosci* 2013;7:425. PMID 23964220.
+
 ## Photos used to test the AI
 
 - **Nutrition5k** — Q. Thames, A. Karpur, W. Norris, F. Xia, L. Panait, T. Weyand, J. Sim, “Nutrition5k: Towards
