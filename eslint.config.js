@@ -7,4 +7,9 @@ module.exports = defineConfig([
   {
     ignores: ['dist/*', '.expo/*', 'node_modules/*'],
   },
+  {
+    // Edge Functions resolve bare imports through each function's deno.json; `deno check` verifies them.
+    files: ['supabase/functions/**/*.ts'],
+    rules: { 'import/no-unresolved': 'off' },
+  },
 ]);
