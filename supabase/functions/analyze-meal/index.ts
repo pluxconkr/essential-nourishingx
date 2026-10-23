@@ -4,6 +4,9 @@
  * The photo lives only in this request's memory: it is never written to storage, the database or logs.
  * Flow: budget + daily-limit check → Haiku triage → chooseTier → deep analysis → checkDeep → at most one
  * retry on the next tier → meal_analyses row (service role, verified user id) → response.
+ * Eval mode (secret key only, scripts/eval-router.mjs): may force a tier, never retries, stores nothing but
+ * the ai_usage rows (fn = 'eval'). The platform's verify_jwt is off for this function (supabase/config.toml)
+ * because a secret key is not a JWT; withSupabase still rejects every caller that is neither a user nor the key.
  */
 import { withSupabase } from '@supabase/server';
 import { z } from 'zod';
@@ -17,6 +20,8 @@ const Body = z.object({
   media_type: z.enum(['image/jpeg', 'image/png', 'image/webp']),
   meal: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
   day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  force_tier: z.enum(['haiku', 'opus', 'fable']).optional(),
+  force_effort: z.enum(['low', 'medium', 'high']).optional(),
 });
 
 /** The platform answers 504 when a request sends nothing for 150 s; stop starting model calls well before. */
@@ -30,19 +35,21 @@ const schoolToday = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Am
 const daysBetween = (a: string, b: string) => Math.round((Date.parse(b) - Date.parse(a)) / 86_400_000);
 
 export default {
-  fetch: withSupabase({ auth: 'user' }, async (req, ctx) => {
+  fetch: withSupabase({ auth: ['user', 'secret'] }, async (req, ctx) => {
     if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
     const started = Date.now();
     const left = () => DEADLINE_MS - (Date.now() - started);
+    const evalMode = ctx.authMode === 'secret';
 
     const parsed = Body.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return json({ error: 'bad_request' }, 400);
-    const { image, media_type, meal, day } = parsed.data;
+    const { image, media_type, meal, day, force_tier, force_effort } = parsed.data;
+    if ((force_tier || force_effort) && !evalMode) return json({ error: 'eval_options_need_secret_key' }, 403);
     const gap = daysBetween(day, schoolToday());
     if (Number.isNaN(gap) || gap < -1 || gap > 6) return json({ error: 'day_out_of_range' }, 400);
 
-    const userId = ctx.userClaims?.id;
-    if (!userId) return json({ error: 'unauthorized' }, 401);
+    const userId = evalMode ? null : ctx.userClaims?.id;
+    if (!evalMode && !userId) return json({ error: 'unauthorized' }, 401);
     const admin = ctx.supabaseAdmin;
 
     const { data: budget, error: budgetError } = await admin.rpc('ai_budget_status');
@@ -51,9 +58,11 @@ export default {
     let spent = Number(budget.spent_usd);
     if (spent + worstCaseCostUsd('haiku') >= cap) return json({ error: 'budget_reached' }, 429);
 
-    const since = new Date(Date.now() - 86_400_000).toISOString();
-    const { count } = await admin.from('ai_usage').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('stage', 'triage').gte('created_at', since);
-    if ((count ?? 0) >= Number(budget.per_student_per_day)) return json({ error: 'daily_limit' }, 429);
+    if (userId) {
+      const since = new Date(Date.now() - 86_400_000).toISOString();
+      const { count } = await admin.from('ai_usage').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('stage', 'triage').gte('created_at', since);
+      if ((count ?? 0) >= Number(budget.per_student_per_day)) return json({ error: 'daily_limit' }, 429);
+    }
 
     let costThisRequest = 0;
     const log = async (stage: 'triage' | 'deep' | 'retry', call: Call<unknown>, ok: boolean) => {
@@ -62,7 +71,7 @@ export default {
       costThisRequest += cost;
       await admin.from('ai_usage').insert({
         user_id: userId,
-        fn: 'analyze-meal',
+        fn: evalMode ? 'eval' : 'analyze-meal',
         stage,
         model: call.model,
         input_tokens: call.usage.input_tokens,
@@ -81,13 +90,13 @@ export default {
     if (!tri.output) return json({ error: 'analysis_failed', stage: 'triage', detail: tri.error }, 502);
     if (!tri.output.is_food) return json({ status: 'not_food', triage: tri.output, cost_usd: costThisRequest, ms: Date.now() - started });
 
-    const route = chooseTier(tri.output, cap - spent);
+    const route = force_tier ? { tier: force_tier, why: [`forced ${force_tier} (eval)`] } : chooseTier(tri.output, cap - spent);
     let tier: Tier = route.tier;
-    let attempt = await deep(image, media, tri.output, tier, Math.max(20_000, left() - 5_000));
+    let attempt = await deep(image, media, tri.output, tier, Math.max(20_000, left() - 5_000), force_effort);
     let checked = attempt.output ? checkDeep(attempt.output) : null;
     await log('deep', attempt, Boolean(checked?.ok));
 
-    const up = nextTier(tier);
+    const up = force_tier ? null : nextTier(tier);
     if (!checked?.ok && up && left() > RETRY_NEEDS_MS && cap - spent >= worstCaseCostUsd(up)) {
       route.why.push(`retry on ${up}: ${(checked?.problems ?? [attempt.error ?? 'no output']).slice(0, 2).join('; ')}`);
       tier = up;
@@ -100,6 +109,9 @@ export default {
     }
 
     const r = checked.result;
+    if (evalMode) {
+      return json({ status: 'ok', id: null, day, meal, difficulty: tri.output.difficulty, tier, route: route.why, triage: tri.output, analysis: r, cost_usd: Math.round(costThisRequest * 1e6) / 1e6, ms: Date.now() - started });
+    }
     const { data: row, error: saveError } = await admin
       .from('meal_analyses')
       .insert({

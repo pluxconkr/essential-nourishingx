@@ -1,0 +1,810 @@
+{
+ "summary": {
+  "label": "v2-opus",
+  "tier": "opus",
+  "cases": 20,
+  "answered": 17,
+  "is_food_correct": 17,
+  "n5k_scored": 17,
+  "kcal_mape": 0.6640743615625162,
+  "kcal_median_ape": 0.563818861297477,
+  "kcal_bias": 0.5929111453693314,
+  "range_coverage": 0.4117647058823529,
+  "protein_mae_g": 6.65088094117647,
+  "carb_mae_g": 12.637706882352939,
+  "fat_mae_g": 5.106531705882353,
+  "mass_mape": 0.5133200641069436,
+  "recall": 0.8480392156862745,
+  "tiers": {
+   "none": 3,
+   "opus": 17
+  },
+  "cost_usd": 0.439771,
+  "mean_ms": 12878
+ },
+ "results": [
+  {
+   "id": "n5k-cheese-pizza",
+   "band": "1",
+   "http": 503,
+   "difficulty": null,
+   "tier": null,
+   "route": null,
+   "signals": null,
+   "items": [],
+   "kcal": null,
+   "kcal_range": null,
+   "truth_kcal": 165,
+   "cost_usd": 0,
+   "ms": 10357,
+   "detail": null,
+   "is_food_ok": false,
+   "recall": null,
+   "kcal_err": null,
+   "in_range": null,
+   "protein_err": null,
+   "carb_err": null,
+   "fat_err": null,
+   "mass_err": null,
+   "major": [
+    "pizza"
+   ]
+  },
+  {
+   "id": "n5k-apple-b",
+   "band": "1",
+   "http": 503,
+   "difficulty": null,
+   "tier": null,
+   "route": null,
+   "signals": null,
+   "items": [],
+   "kcal": null,
+   "kcal_range": null,
+   "truth_kcal": 84,
+   "cost_usd": 0,
+   "ms": 10362,
+   "detail": null,
+   "is_food_ok": false,
+   "recall": null,
+   "kcal_err": null,
+   "in_range": null,
+   "protein_err": null,
+   "carb_err": null,
+   "fat_err": null,
+   "mass_err": null,
+   "major": [
+    "apple"
+   ]
+  },
+  {
+   "id": "n5k-sweet-potato",
+   "band": "1",
+   "http": 503,
+   "difficulty": null,
+   "tier": null,
+   "route": null,
+   "signals": null,
+   "items": [],
+   "kcal": null,
+   "kcal_range": null,
+   "truth_kcal": 73,
+   "cost_usd": 0,
+   "ms": 10367,
+   "detail": null,
+   "is_food_ok": false,
+   "recall": null,
+   "kcal_err": null,
+   "in_range": null,
+   "protein_err": null,
+   "carb_err": null,
+   "fat_err": null,
+   "mass_err": null,
+   "major": [
+    "potato"
+   ]
+  },
+  {
+   "id": "n5k-apple-a",
+   "band": "1",
+   "http": 200,
+   "status": "ok",
+   "difficulty": "easy",
+   "tier": "opus",
+   "route": [
+    "forced opus (eval)"
+   ],
+   "signals": [
+    "partly_eaten"
+   ],
+   "items": [
+    "Raw apple, whole, with skin 180g 94kcal"
+   ],
+   "kcal": 94,
+   "kcal_range": [
+    75,
+    125
+   ],
+   "truth_kcal": 84,
+   "cost_usd": 0.01754,
+   "ms": 16139,
+   "detail": null,
+   "is_food_ok": true,
+   "recall": 1,
+   "kcal_err": 0.1227903336925705,
+   "in_range": true,
+   "protein_err": 0.017000000000000015,
+   "carb_err": 2.2599990000000005,
+   "fat_err": -0.02200000000000002,
+   "mass_err": 0.11801242236024845,
+   "major": [
+    "apple"
+   ]
+  },
+  {
+   "id": "n5k-sweet-potato-oil-a",
+   "band": "2-3",
+   "http": 200,
+   "status": "ok",
+   "difficulty": "easy",
+   "tier": "opus",
+   "route": [
+    "forced opus (eval)"
+   ],
+   "signals": [
+    "occluded",
+    "unclear_portion"
+   ],
+   "items": [
+    "roasted sweet potato cubes 130g 163kcal"
+   ],
+   "kcal": 163,
+   "kcal_range": [
+    110,
+    240
+   ],
+   "truth_kcal": 75,
+   "cost_usd": 0.017329,
+   "ms": 8503,
+   "detail": null,
+   "is_food_ok": true,
+   "recall": 1,
+   "kcal_err": 1.1834730619905014,
+   "in_range": false,
+   "protein_err": 1.539024,
+   "carb_err": 12.302438,
+   "fat_err": 2.597561,
+   "mass_err": 0.6666666666666666,
+   "major": [
+    "potato"
+   ]
+  },
+  {
+   "id": "n5k-broccoli-berries",
+   "band": "2-3",
+   "http": 200,
+   "status": "ok",
+   "difficulty": "easy",
+   "tier": "opus",
+   "route": [
+    "forced opus (eval)"
+   ],
+   "signals": [
+    "partly_eaten"
+   ],
+   "items": [
+    "Roasted broccoli florets 90g 72kcal",
+    "Fresh strawberries, halved 70g 22kcal",
+    "Blueberries 25g 14kcal"
+   ],
+   "kcal": 108,
+   "kcal_range": [
+    70,
+    170
+   ],
+   "truth_kcal": 69,
+   "cost_usd": 0.024384,
+   "ms": 12766,
+   "detail": null,
+   "is_food_ok": true,
+   "recall": 1,
+   "kcal_err": 0.563818861297477,
+   "in_range": false,
+   "protein_err": 1.7386580000000003,
+   "carb_err": 1.0731719999999996,
+   "fat_err": 3.998171,
+   "mass_err": 0.5163934426229508,
+   "major": [
+    "broccoli",
+    "berri"
+   ]
+  },
+  {
+   "id": "n5k-sweet-potato-oil-b",
+   "band": "2-3",
+   "http": 200,
+   "status": "ok",
+   "difficulty": "medium",
+   "tier": "opus",
+   "route": [
+    "forced opus (eval)"
+   ],
+   "signals": [
+    "many_items",
+    "unclear_portion"
+   ],
+   "items": [
+    "roasted potato cubes (home fries) 120g 166kcal",
+    "cantaloupe chunks 100g 34kcal"
+   ],
+   "kcal": 200,
+   "kcal_range": [
+    140,
+    290
+   ],
+   "truth_kcal": 82,
+   "cost_usd": 0.020249,
+   "ms": 8743,
+   "detail": null,
+   "is_food_ok": true,
+   "recall": 1,
+   "kcal_err": 1.4298887198442305,
+   "in_range": false,
+   "protein_err": 2.560976,
+   "carb_err": 17.09756,
+   "fat_err": 4.302439000000001,
+   "mass_err": 1.558139534883721,
+   "major": [
+    "potato"
+   ]
+  },
+  {
+   "id": "n5k-egg-whites",
+   "band": "1",
+   "http": 200,
+   "status": "ok",
+   "difficulty": "easy",
+   "tier": "opus",
+   "route": [
+    "forced opus (eval)"
+   ],
+   "signals": [
+    "unclear_portion"
+   ],
+   "items": [
+    "Scrambled egg whites 200g 104kcal",
+    "Cooking oil or butter (estimated, not visible) 3g 26kcal"
+   ],
+   "kcal": 130,
+   "kcal_range": [
+    95,
+    220
+   ],
+   "truth_kcal": 296,
+   "cost_usd": 0.021732,
+   "ms": 16065,
+   "detail": null,
+   "is_food_ok": true,
+   "recall": 1,
+   "kcal_err": -0.5614034998934582,
+   "in_range": false,
+   "protein_err": -35.2,
+   "carb_err": -2.49,
+   "fat_err": 2.26,
+   "mass_err": -0.643859649122807,
+   "major": [
+    "whit"
+   ]
+  },
+  {
+   "id": "n5k-cone-froyo",
+   "band": "2-3",
+   "http": 200,
+   "status": "ok",
+   "difficulty": "medium",
+   "tier": "opus",
+   "route": [
+    "forced opus (eval)"
+   ],
+   "signals": [
+    "unclear_portion",
+    "hidden_fat_or_sauce"
+   ],
+   "items": [
+    "Chocolate pudding in a small cup (possibly a tart shell) 120g 170kcal"
+   ],
+   "kcal": 170,
+   "kcal_range": [
+    120,
+    306
+   ],
+   "truth_kcal": 177,
+   "cost_usd": 0.019279,
+   "ms": 9882,
+   "detail": null,
+   "is_food_ok": true,
+   "recall": 0,
+   "kcal_err": -0.039564333726626086,
+   "in_range": true,
+   "protein_err": -1.6869999999999998,
+   "carb_err": -0.5249999999999986,
+   "fat_err": -0.41300000000000026,
+   "mass_err": 0.21212121212121213,
+   "major": [
+    "yogurt"
+   ]
+  },
+  {
+   "id": "n5k-bacon-pineapple",
+   "band": "2-3",
+   "http": 200,
+   "status": "ok",
+   "difficulty": "medium",
+   "tier": "opus",
+   "route": [
+    "forced opus (eval)"
+   ],
+   "signals": [
+    "hidden_fat_or_sauce",
+    "unclear_portion"
+   ],
+   "items": [
+    "Bacon strips, cooked 35g 189kcal",
+    "Pineapple chunks, fresh 105g 53kcal"
+   ],
+   "kcal": 242,
+   "kcal_range": [
+    170,
+    340
+   ],
+   "truth_kcal": 128,
+   "cost_usd": 0.020338,
+   "ms": 11534,
+   "detail": null,
+   "is_food_ok": true,
+   "recall": 1,
+   "kcal_err": 0.8923991685736432,
+   "in_range": false,
+   "protein_err": 6.635,
+   "carb_err": 6.118,
+   "fat_err": 7.179,
+   "mass_err": 0.7721518987341772,
+   "major": [
+    "bacon",
+    "pineapple"
+   ]
+  },
+  {
+   "id": "n5k-potato-rice-spinach",
+   "band": "4-6",
+   "http": 200,
+   "status": "ok",
+   "difficulty": "easy",
+   "tier": "opus",
+   "route": [
+    "forced opus (eval)"
+   ],
+   "signals": [
+    "hidden_fat_or_sauce"
+   ],
+   "items": [
+    "Steamed white rice 150g 195kcal",
+    "Raw baby spinach leaves 25g 6kcal",
+    "Roasted potato chunks with oil 180g 216kcal",
+    "Roasted almonds 27g 161kcal"
+   ],
+   "kcal": 578,
+   "kcal_range": [
+    450,
+    760
+   ],
+   "truth_kcal": 291,
+   "cost_usd": 0.026978,
+   "ms": 15421,
+   "detail": null,
+   "is_food_ok": true,
+   "recall": 1,
+   "kcal_err": 0.9850606124177123,
+   "in_range": false,
+   "protein_err": 4.702999,
+   "carb_err": 42.089001999999994,
+   "fat_err": 10.623001,
+   "mass_err": 1.053763440860215,
+   "major": [
+    "potato",
+    "rice"
+   ]
+  },
+  {
+   "id": "n5k-eggs-sweet-potato-melon",
+   "band": "4-6",
+   "http": 200,
+   "status": "ok",
+   "difficulty": "medium",
+   "tier": "opus",
+   "route": [
+    "forced opus (eval)"
+   ],
+   "signals": [
+    "hidden_fat_or_sauce",
+    "unclear_portion"
+   ],
+   "items": [
+    "Roasted potato cubes 130g 195kcal",
+    "Cantaloupe melon cubes 110g 37kcal",
+    "Scrambled egg whites 180g 126kcal",
+    "Tomato-based sauce on side plate 60g 30kcal"
+   ],
+   "kcal": 388,
+   "kcal_range": [
+    290,
+    560
+   ],
+   "truth_kcal": 221,
+   "cost_usd": 0.030802,
+   "ms": 14262,
+   "detail": null,
+   "is_food_ok": true,
+   "recall": 1,
+   "kcal_err": 0.7589561570793726,
+   "in_range": false,
+   "protein_err": 1.3752190000000013,
+   "carb_err": 18.942949,
+   "fat_err": 11.300049,
+   "mass_err": 0.2765957446808511,
+   "major": [
+    "whit",
+    "potato",
+    "cantaloupe"
+   ]
+  },
+  {
+   "id": "n5k-melon-almonds-sausage",
+   "band": "4-6",
+   "http": 200,
+   "status": "ok",
+   "difficulty": "medium",
+   "tier": "opus",
+   "route": [
+    "forced opus (eval)"
+   ],
+   "signals": [
+    "many_items"
+   ],
+   "items": [
+    "Cheddar cheese cubes 60g 242kcal",
+    "Whole raw almonds 55g 318kcal",
+    "Red and green grapes 100g 69kcal",
+    "Sliced smoked sausage rounds 95g 266kcal"
+   ],
+   "kcal": 895,
+   "kcal_range": [
+    680,
+    1150
+   ],
+   "truth_kcal": 888,
+   "cost_usd": 0.030191,
+   "ms": 14346,
+   "detail": null,
+   "is_food_ok": true,
+   "recall": 1,
+   "kcal_err": 0.007621922421488234,
+   "in_range": true,
+   "protein_err": 1.342998999999999,
+   "carb_err": -9.490001,
+   "fat_err": 3.931003000000004,
+   "mass_err": -0.046153846153846156,
+   "major": [
+    "almond",
+    "sausage",
+    "grap"
+   ]
+  },
+  {
+   "id": "n5k-eggs-yam-sausage",
+   "band": "4-6",
+   "http": 200,
+   "status": "ok",
+   "difficulty": "medium",
+   "tier": "opus",
+   "route": [
+    "forced opus (eval)"
+   ],
+   "signals": [
+    "many_items",
+    "mixed_dish",
+    "occluded"
+   ],
+   "items": [
+    "scrambled egg whites 110g 66kcal",
+    "sausage slices (link rounds) 35g 105kcal",
+    "strawberries, cut 80g 26kcal",
+    "watermelon chunks 50g 15kcal",
+    "raspberries 25g 13kcal",
+    "blueberries 10g 6kcal",
+    "blackberries 10g 4kcal",
+    "pineapple chunks 150g 75kcal",
+    "cantaloupe pieces 15g 5kcal"
+   ],
+   "kcal": 315,
+   "kcal_range": [
+    230,
+    430
+   ],
+   "truth_kcal": 316,
+   "cost_usd": 0.044598,
+   "ms": 24947,
+   "detail": null,
+   "is_food_ok": true,
+   "recall": 1,
+   "kcal_err": -0.003919504021986525,
+   "in_range": true,
+   "protein_err": 3.5510020000000004,
+   "carb_err": -16.592,
+   "fat_err": 6.836999999999999,
+   "mass_err": 0.03411513859275053,
+   "major": [
+    "whit",
+    "berri",
+    "pineapple"
+   ]
+  },
+  {
+   "id": "n5k-couscous-veg",
+   "band": "7+",
+   "http": 200,
+   "status": "ok",
+   "difficulty": "medium",
+   "tier": "opus",
+   "route": [
+    "forced opus (eval)"
+   ],
+   "signals": [
+    "mixed_dish",
+    "unfamiliar_dish",
+    "unclear_portion"
+   ],
+   "items": [
+    "Roasted potato chunks 120g 138kcal",
+    "Cooked yellow squash and zucchini slices 100g 35kcal",
+    "Yellow seasoned couscous with herbs, vegetables and raisins 170g 255kcal"
+   ],
+   "kcal": 428,
+   "kcal_range": [
+    320,
+    600
+   ],
+   "truth_kcal": 111,
+   "cost_usd": 0.026118,
+   "ms": 11317,
+   "detail": null,
+   "is_food_ok": true,
+   "recall": 0.5,
+   "kcal_err": 2.8447855406024036,
+   "in_range": false,
+   "protein_err": 6.609026,
+   "carb_err": 46.237376999999995,
+   "fat_err": 11.676967000000001,
+   "mass_err": 0.9306930693069307,
+   "major": [
+    "couscou",
+    "turnip"
+   ]
+  },
+  {
+   "id": "n5k-bokchoy-pizza",
+   "band": "4-6",
+   "http": 200,
+   "status": "ok",
+   "difficulty": "hard",
+   "tier": "opus",
+   "route": [
+    "forced opus (eval)"
+   ],
+   "signals": [
+    "mixed_dish",
+    "hidden_fat_or_sauce",
+    "many_items",
+    "unclear_portion"
+   ],
+   "items": [
+    "cheese lasagna with tomato sauce 110g 176kcal",
+    "pineapple chunks 100g 50kcal",
+    "roasted brussels sprouts 70g 58kcal",
+    "cooked bok choy 70g 11kcal"
+   ],
+   "kcal": 295,
+   "kcal_range": [
+    220,
+    420
+   ],
+   "truth_kcal": 162,
+   "cost_usd": 0.031664,
+   "ms": 16058,
+   "detail": null,
+   "is_food_ok": true,
+   "recall": 0.75,
+   "kcal_err": 0.8201001308035012,
+   "in_range": false,
+   "protein_err": 6.167000000000001,
+   "carb_err": 9.508999999999997,
+   "fat_err": 6.699000000000001,
+   "mass_err": 0.9774011299435028,
+   "major": [
+    "choy",
+    "sprout",
+    "pizza",
+    "pineapple"
+   ]
+  },
+  {
+   "id": "n5k-spinach-shallots",
+   "band": "7+",
+   "http": 200,
+   "status": "ok",
+   "difficulty": "medium",
+   "tier": "opus",
+   "route": [
+    "forced opus (eval)"
+   ],
+   "signals": [
+    "hidden_fat_or_sauce",
+    "unclear_portion"
+   ],
+   "items": [
+    "Breaded baked chicken thigh with crumb topping (bone-in, edi 100g 240kcal"
+   ],
+   "kcal": 240,
+   "kcal_range": [
+    170,
+    340
+   ],
+   "truth_kcal": 221,
+   "cost_usd": 0.016991,
+   "ms": 7681,
+   "detail": null,
+   "is_food_ok": true,
+   "recall": 1,
+   "kcal_err": 0.08619131274959453,
+   "in_range": true,
+   "protein_err": -5.754598999999999,
+   "carb_err": 4.576861,
+   "fat_err": 3.134333,
+   "mass_err": -0.3150684931506849,
+   "major": [
+    "thigh"
+   ]
+  },
+  {
+   "id": "n5k-yogurt-berries-bacon",
+   "band": "7+",
+   "http": 200,
+   "status": "ok",
+   "difficulty": "hard",
+   "tier": "opus",
+   "route": [
+    "forced opus (eval)"
+   ],
+   "signals": [
+    "many_items"
+   ],
+   "items": [
+    "scrambled eggs 130g 194kcal",
+    "bacon, cooked 10g 54kcal",
+    "pineapple chunks, fresh 140g 70kcal",
+    "raspberries 30g 16kcal",
+    "blueberries 25g 14kcal",
+    "chia seed pudding 100g 130kcal"
+   ],
+   "kcal": 478,
+   "kcal_range": [
+    360,
+    650
+   ],
+   "truth_kcal": 441,
+   "cost_usd": 0.032486,
+   "ms": 13256,
+   "detail": null,
+   "is_food_ok": true,
+   "recall": 1,
+   "kcal_err": 0.08465434437307984,
+   "in_range": true,
+   "protein_err": -2.6519270000000006,
+   "carb_err": 4.998742,
+   "fat_err": 2.882522999999999,
+   "mass_err": 0.025943396226415096,
+   "major": [
+    "pineapple",
+    "egg"
+   ]
+  },
+  {
+   "id": "n5k-greens-kale",
+   "band": "7+",
+   "http": 200,
+   "status": "ok",
+   "difficulty": "medium",
+   "tier": "opus",
+   "route": [
+    "forced opus (eval)"
+   ],
+   "signals": [
+    "mixed_dish",
+    "hidden_fat_or_sauce",
+    "occluded"
+   ],
+   "items": [
+    "Sliced grilled beef steak (flank/skirt), medium-rare 100g 200kcal",
+    "Roasted acorn/delicata squash with oil 140g 126kcal",
+    "Arugula 40g 10kcal",
+    "Shredded carrot 10g 4kcal",
+    "Vinaigrette dressing 12g 54kcal"
+   ],
+   "kcal": 394,
+   "kcal_range": [
+    290,
+    560
+   ],
+   "truth_kcal": 372,
+   "cost_usd": 0.030301,
+   "ms": 12966,
+   "detail": null,
+   "is_food_ok": true,
+   "recall": 0.6666666666666666,
+   "kcal_err": 0.059242582730434847,
+   "in_range": true,
+   "protein_err": 6.211441000000001,
+   "carb_err": 7.322935000000001,
+   "fat_err": -3.276419999999998,
+   "mass_err": 0.13108614232209737,
+   "major": [
+    "green",
+    "steak",
+    "squash"
+   ]
+  },
+  {
+   "id": "n5k-peppers-arugula",
+   "band": "7+",
+   "http": 200,
+   "status": "ok",
+   "difficulty": "medium",
+   "tier": "opus",
+   "route": [
+    "forced opus (eval)"
+   ],
+   "signals": [
+    "mixed_dish",
+    "hidden_fat_or_sauce",
+    "unclear_portion"
+   ],
+   "items": [
+    "Sautéed bok choy 150g 60kcal",
+    "Cooked brown lentils with diced red pepper 150g 195kcal",
+    "Seasoned roasted chicken pieces 100g 180kcal",
+    "Roasted orange bell pepper 20g 8kcal"
+   ],
+   "kcal": 443,
+   "kcal_range": [
+    330,
+    620
+   ],
+   "truth_kcal": 240,
+   "cost_usd": 0.028791,
+   "ms": 12586,
+   "detail": null,
+   "is_food_ok": true,
+   "recall": 0.5,
+   "kcal_err": 0.845394060344694,
+   "in_range": false,
+   "protein_err": 25.321106,
+   "carb_err": 13.215981,
+   "fat_err": 5.678572000000001,
+   "mass_err": 0.4482758620689655,
+   "major": [
+    "berry",
+    "choy"
+   ]
+  }
+ ]
+}

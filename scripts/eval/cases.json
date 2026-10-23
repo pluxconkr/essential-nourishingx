@@ -1,0 +1,96 @@
+{
+  "about": "Router eval cases (docs/ai-router.md). Nutrition5k dishes carry measured calories and macros; Commons photos carry labels only. Images are downloaded at run time into .cache/eval/ and are not stored in this repo.",
+  "sources": {
+    "nutrition5k": {
+      "citation": "Thames et al., Nutrition5k: Towards Automatic Nutritional Understanding of Generic Food, CVPR 2021",
+      "license": "CC BY 4.0",
+      "metadata": "https://storage.googleapis.com/nutrition5k_dataset/nutrition5k_dataset/metadata/dish_metadata_cafe1.csv",
+      "image": "https://storage.googleapis.com/nutrition5k_dataset/nutrition5k_dataset/imagery/realsense_overhead/{dish}/rgb.png"
+    }
+  },
+  "cases": [
+    { "id": "n5k-apple-a", "dish": "dish_1558724891", "band": "1" },
+    { "id": "n5k-sweet-potato", "dish": "dish_1559319971", "band": "1" },
+    { "id": "n5k-apple-b", "dish": "dish_1558725760", "band": "1" },
+    { "id": "n5k-cheese-pizza", "dish": "dish_1564518454", "band": "1" },
+    { "id": "n5k-egg-whites", "dish": "dish_1566920304", "band": "1" },
+    { "id": "n5k-broccoli-berries", "dish": "dish_1562690917", "band": "2-3" },
+    { "id": "n5k-sweet-potato-oil-a", "dish": "dish_1565799507", "band": "2-3" },
+    { "id": "n5k-sweet-potato-oil-b", "dish": "dish_1566488905", "band": "2-3" },
+    { "id": "n5k-cone-froyo", "dish": "dish_1560370833", "band": "2-3" },
+    { "id": "n5k-bacon-pineapple", "dish": "dish_1563295016", "band": "2-3" },
+    { "id": "n5k-potato-rice-spinach", "dish": "dish_1558547205", "band": "4-6" },
+    { "id": "n5k-eggs-yam-sausage", "dish": "dish_1563205982", "band": "4-6" },
+    { "id": "n5k-eggs-sweet-potato-melon", "dish": "dish_1563811463", "band": "4-6" },
+    { "id": "n5k-melon-almonds-sausage", "dish": "dish_1558373492", "band": "4-6" },
+    { "id": "n5k-bokchoy-pizza", "dish": "dish_1561060531", "band": "4-6" },
+    { "id": "n5k-couscous-veg", "dish": "dish_1563824130", "band": "7+" },
+    { "id": "n5k-yogurt-berries-bacon", "dish": "dish_1563898107", "band": "7+" },
+    { "id": "n5k-spinach-shallots", "dish": "dish_1566936266", "band": "7+" },
+    { "id": "n5k-greens-kale", "dish": "dish_1562613376", "band": "7+" },
+    { "id": "n5k-peppers-arugula", "dish": "dish_1565811423", "band": "7+" },
+    {
+      "id": "commons-usda-tray",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/School_lunch_tray_MyPlate_20210810-FNS-UNC-0015.jpg/1280px-School_lunch_tray_MyPlate_20210810-FNS-UNC-0015.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:School_lunch_tray_MyPlate_20210810-FNS-UNC-0015.jpg",
+      "license": "Public domain", "author": "U.S. Department of Agriculture",
+      "expect": { "is_food": true, "keywords": ["sandwich|turkey|roll", "chili|soup|bean", "strawberr|melon|cantaloupe|fruit", "milk"] }
+    },
+    {
+      "id": "commons-unicafe-tray",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/School_Lunch_%28105717058%29.jpg/1280px-School_Lunch_%28105717058%29.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:School_Lunch_(105717058).jpg",
+      "license": "CC BY-SA 2.0", "author": "Sean Biehle",
+      "expect": { "is_food": true, "keywords": ["fish|fillet|breaded|schnitzel", "potato", "pea", "mushroom", "bread"] }
+    },
+    {
+      "id": "commons-finnish-soup",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/School_lunch_in_yl%C3%A4st%C3%B6_school.jpg/1280px-School_lunch_in_yl%C3%A4st%C3%B6_school.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:School_lunch_in_yl%C3%A4st%C3%B6_school.jpg",
+      "license": "CC0", "author": "Jukajuha",
+      "expect": { "is_food": true, "keywords": ["soup|stew|chowder", "potato", "bread|rye", "cucumber"] }
+    },
+    {
+      "id": "commons-pizza-slice",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Fat_Slice_pepperoni_pizza_slice.JPG/1280px-Fat_Slice_pepperoni_pizza_slice.JPG",
+      "page": "https://commons.wikimedia.org/wiki/File:Fat_Slice_pepperoni_pizza_slice.JPG",
+      "license": "CC BY 3.0", "author": "BrokenSphere",
+      "expect": { "is_food": true, "keywords": ["pizza"] }
+    },
+    {
+      "id": "commons-caesar-salad",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Caesar_salad_%282%29.jpg/1280px-Caesar_salad_%282%29.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Caesar_salad_(2).jpg",
+      "license": "CC BY 2.0", "author": "Geoff Peters",
+      "expect": { "is_food": true, "keywords": ["lettuce|romaine|salad", "crouton|bread"] }
+    },
+    {
+      "id": "commons-burrito",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/6/60/Burrito.JPG",
+      "page": "https://commons.wikimedia.org/wiki/File:Burrito.JPG",
+      "license": "CC0", "author": "samuelfernandezrivera",
+      "expect": { "is_food": true, "keywords": ["burrito|wrap|tortilla"] }
+    },
+    {
+      "id": "commons-bibimbap",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Korean.food-Bibimbap-02.jpg/1280px-Korean.food-Bibimbap-02.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Korean.food-Bibimbap-02.jpg",
+      "license": "CC BY-SA 2.0", "author": "abex (Flickr user)",
+      "expect": { "is_food": true, "keywords": ["rice|bibimbap"] }
+    },
+    {
+      "id": "commons-cat",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Tabby_cat_with_blue_eyes-3336579.jpg/1280px-Tabby_cat_with_blue_eyes-3336579.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Tabby_cat_with_blue_eyes-3336579.jpg",
+      "license": "CC0", "author": "AdinaVoicu",
+      "expect": { "is_food": false, "keywords": [] }
+    },
+    {
+      "id": "commons-laptop",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Laptop_on_a_neat_desk_%28Unsplash%29.jpg/1280px-Laptop_on_a_neat_desk_%28Unsplash%29.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Laptop_on_a_neat_desk_(Unsplash).jpg",
+      "license": "CC0", "author": "Norbert Levajsics",
+      "expect": { "is_food": false, "keywords": [] }
+    }
+  ]
+}

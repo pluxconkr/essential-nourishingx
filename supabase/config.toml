@@ -415,3 +415,9 @@ enabled = true
 # formatted with uppercase keywords, indent 2, max width 180, trailing commas,
 # and column/key alignment. Set to "null" to emit raw, unformatted SQL.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":180,\"commaStyle\":\"trailing\"}"
+
+# Edge Functions (docs/adr/0001-supabase-ai-pivot.md). analyze-meal accepts a student JWT or, for the eval
+# harness only, the secret key; a secret key is not a JWT, so the platform check is off and @supabase/server's
+# withSupabase({ auth: ['user', 'secret'] }) authenticates every request instead.
+[functions.analyze-meal]
+verify_jwt = false

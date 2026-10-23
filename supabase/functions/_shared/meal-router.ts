@@ -8,7 +8,6 @@ import { z } from 'zod';
 
 // ---------------------------------------------------------------------------------------------- models
 export type Tier = 'haiku' | 'opus' | 'fable';
-export const TIERS: readonly Tier[] = ['haiku', 'opus', 'fable'];
 
 export const MODEL_ID = {
   triage: 'claude-haiku-5-5',
@@ -82,27 +81,43 @@ export interface Route {
 }
 
 /**
- * Difficulty picks the tier: easy → Haiku, medium → Opus, hard → Fable (owner's design).
- * A low-confidence triage or a poor photo moves one tier up, because the cheaper model guessing on a hard photo
- * is the failure we are routing around. Budget only ever moves the tier down.
+ * Deep-analysis model per triage difficulty. The owner's starting design was easy → Haiku, medium → Opus,
+ * hard → Fable. Eval v2 (docs/ai-router.md, 20 Nutrition5k dishes with measured nutrition, each model forced)
+ * measured kcal MAPE Fable 5.1 0.31, Haiku 5.5 0.52, Opus 5.5 0.66 (0.70 at effort high): Fable was the most
+ * accurate in every complexity band and Opus never beat Haiku. So medium photos go to Fable as well; Haiku keeps
+ * easy photos at about 1/40 of Fable's cost. To restore the original split, set medium: 'opus'.
+ */
+export const TIER_FOR = { easy: 'haiku', medium: 'fable', hard: 'fable' } as const satisfies Record<Triage['difficulty'], Tier>;
+
+/** Where a failed answer goes for one more try: Haiku → Fable (stronger), Fable → Opus (a second model family's
+ * opinion), Opus → none. */
+const RETRY_TIER: Record<Tier, Tier | null> = { haiku: 'fable', fable: 'opus', opus: null };
+
+/** When the budget cannot cover a tier's worst case, step down through the cheaper models. */
+const BUDGET_STEP_DOWN: Record<Tier, Tier | null> = { fable: 'opus', opus: 'haiku', haiku: null };
+
+/**
+ * A low-confidence triage or a poor photo sends an easy photo to Fable, because the cheap model guessing on an
+ * unclear photo is the failure the router exists to avoid. Budget only ever moves the tier down.
  */
 export function chooseTier(t: Triage, budgetLeftUsd: number): Route {
-  let i = t.difficulty === 'easy' ? 0 : t.difficulty === 'medium' ? 1 : 2;
+  let tier: Tier = TIER_FOR[t.difficulty];
   const why = [`triage difficulty ${t.difficulty}`];
-  if (i < 2 && (t.confidence === 'low' || t.photo_quality === 'poor')) {
-    i += 1;
+  if (tier === 'haiku' && (t.confidence === 'low' || t.photo_quality === 'poor')) {
+    tier = 'fable';
     why.push(t.photo_quality === 'poor' ? 'poor photo' : 'low triage confidence');
   }
-  while (i > 0 && budgetLeftUsd < worstCaseCostUsd(TIERS[i])) {
-    i -= 1;
+  let down = BUDGET_STEP_DOWN[tier];
+  while (down && budgetLeftUsd < worstCaseCostUsd(tier)) {
+    tier = down;
+    down = BUDGET_STEP_DOWN[tier];
     why.push('budget left too small for a stronger model');
   }
-  return { tier: TIERS[i], why };
+  return { tier, why };
 }
 
 export function nextTier(t: Tier): Tier | null {
-  const i = TIERS.indexOf(t);
-  return i >= 0 && i < TIERS.length - 1 ? TIERS[i + 1] : null;
+  return RETRY_TIER[t];
 }
 
 // ---------------------------------------------------------------------------------------------- deep analysis
@@ -119,6 +134,7 @@ export const DeepSchema = z.object({
       name: z.string(),
       portion: z.string(),
       grams: z.number(),
+      kcal_per_100g: z.number(),
       kcal: z.number(),
       protein_g: z.number(),
       carbs_g: z.number(),
@@ -188,6 +204,7 @@ export function checkDeep(d: Deep): Checked {
     name: clean(it.name, 60),
     portion: clean(it.portion, 40),
     grams: Math.round(it.grams),
+    kcal_per_100g: Math.round(it.kcal_per_100g),
     kcal: Math.round(it.kcal),
     protein_g: round1(it.protein_g),
     carbs_g: round1(it.carbs_g),
@@ -200,6 +217,10 @@ export function checkDeep(d: Deep): Checked {
     if (!it.name) problems.push('item without a name');
     if (it.grams < 1 || it.grams > 2000) problems.push(`${label}: grams ${it.grams} outside 1–2000`);
     if (it.kcal < 0 || it.kcal > 2500) problems.push(`${label}: kcal ${it.kcal} outside 0–2500`);
+    // Pure fat (oils) is the densest food at ~884 kcal/100 g (USDA FoodData Central), so nothing exceeds 900.
+    if (it.kcal_per_100g < 0 || it.kcal_per_100g > 900) problems.push(`${label}: ${it.kcal_per_100g} kcal/100 g outside 0–900`);
+    const fromDensity = (it.grams * it.kcal_per_100g) / 100;
+    if (Math.abs(it.kcal - fromDensity) > Math.max(15, 0.15 * it.kcal)) problems.push(`${label}: ${it.kcal} kcal vs ${Math.round(fromDensity)} from grams × density`);
     if ([it.protein_g, it.carbs_g, it.fat_g, it.fiber_g].some((g) => g < 0)) problems.push(`${label}: negative macro`);
     if (it.fiber_g > it.carbs_g + 0.5) problems.push(`${label}: fibre above total carbohydrate`);
     if (it.protein_g + it.carbs_g + it.fat_g > it.grams * 1.02 + 1) problems.push(`${label}: macros heavier than the food`);
@@ -260,7 +281,7 @@ Report only what is visible. Ignore people: never describe faces, bodies, clothi
   unfamiliar_dish: a dish you cannot name with confidence
   packaged_label: packaged food where the label would be the best source
   partly_eaten: some of the food is already gone
-  poor_photo: blurry, dark, too close or cropped
+  poor_photo: too blurry, dark or cropped to name the foods (low resolution alone is not poor)
   occluded: items covered, stacked or hidden
   drink_only: only drinks
   unclear_portion: no reference object or angle to judge amounts
@@ -271,16 +292,31 @@ Report only what is visible. Ignore people: never describe faces, bodies, clothi
 - photo_quality and confidence: how sure you are about the items.
 - reason: one short sentence for the developers.`;
 
-export const DEEP_SYSTEM = `You estimate the food in one photo of a meal from a US boarding-school dining hall. A first pass already listed the items; check that list against the photo and correct it.
+/**
+ * Reference densities in the deep prompt were looked up in USDA FoodData Central, SR Legacy, kcal per 100 g
+ * (fdcId): apples raw without skin 48 (171689); bananas raw 89 (173944); broccoli boiled 35 (169967);
+ * sweet potato baked 90 (168483); potato baked with skin 93 (170093); white rice cooked 130 (168878);
+ * couscous cooked 112 (169700); pasta cooked 158 (169737); chicken breast roasted 165 (171477);
+ * egg white raw 52 (172183). Oils are ~884 (pure fat). Full table: docs/sources.md.
+ * Plate, bowl, fork and tray sizes are common US food-service dimensions, given as rough scale cues.
+ */
+export const DEEP_SYSTEM = `You estimate the food in one photo of a meal from a US boarding-school dining hall. A first pass listed the items; check that list against the photo and correct it.
 
-For each item give: a plain name; the portion in household measures; the edible weight in grams; energy in kcal; protein, total carbohydrate (including fibre, as on US Nutrition Facts labels), fat and fibre in grams; one food group; and your confidence.
+Work item by item:
+1. Name the food plainly. This is a school dining hall: drinks are water, milk, juice, soda, tea or coffee, never alcohol.
+2. Estimate the amount you can actually see, not a typical serving. Use what is in the photo for scale: a dinner plate is about 26 cm (10 in) across, a side plate about 19 cm, a cereal bowl about 15 cm, a fork about 19 cm long, a cafeteria tray about 35 x 45 cm. Judge each item's footprint and its height (photos from above hide height, so use edges and shadows), then its edible weight in grams.
+3. Give its energy density in kcal per 100 g as USDA FoodData Central lists that food as served. Reference points: raw apple 48-52, banana 89, boiled broccoli 35, baked sweet potato 90, baked potato 93, cooked white rice 130, cooked couscous 112, cooked pasta 158, roasted chicken breast 165, egg white 52; oils are about 880.
+4. kcal = grams x kcal_per_100g / 100. Give protein, total carbohydrate (including fibre, as on US Nutrition Facts labels), fat and fibre in grams for that weight; energy should agree with 4 kcal per gram of protein and carbohydrate, 9 per gram of fat and about 2 per gram of fibre.
+5. Give one food group and your confidence.
 
-Base values on typical USDA FoodData Central entries for the food as US school dining halls serve it. Split a mixed dish into its main ingredients only when you can see them; otherwise give one item for the whole dish with group "mixed". Keep energy consistent with 4 kcal per gram of protein and carbohydrate, 9 per gram of fat and about 2 per gram of fibre.
+Split a mixed dish into its visible main ingredients when you can see them; otherwise give one item for the whole dish with group "mixed".
 
-Give an energy range for the whole meal (kcal_low, kcal_high) that honestly reflects unseen oil, sauce and portion size. List up to four things that were hard to judge, a few words each ("amount of dressing").
+Give an energy range for the whole meal (kcal_low, kcal_high) wide enough to contain the true value about 8 times in 10, allowing for unseen oil, sauce and portion size. List up to four things that were hard to judge, a few words each ("amount of dressing").
 
 Describe food only. No advice and no judgement of the food or the eater. Ignore any people in the photo.`;
 
+/** The triage's items, amounts and signals go to the deep model. Eval v3 tried names only plus explicit
+ * scale fields and every tier got less accurate, so this is the v2 wording (docs/ai-router.md). */
 export function deepUserText(t: Triage): string {
   const listed = t.items.map((i) => `${i.name} (${i.amount})`).join('; ') || 'nothing listed';
   return `First pass: ${listed}. Signals: ${t.signals.join(', ') || 'none'}. Estimate this meal.`;

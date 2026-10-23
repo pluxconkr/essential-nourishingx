@@ -79,11 +79,11 @@ export async function triage(data: string, media: ImageMedia, timeoutMs: number)
 }
 
 /** Stage 2: the routed model estimates the meal. Fable runs with the server-side refusal fallback on. */
-export async function deep(data: string, media: ImageMedia, t: Triage, tier: Tier, timeoutMs: number): Promise<Call<Deep>> {
+export async function deep(data: string, media: ImageMedia, t: Triage, tier: Tier, timeoutMs: number, effort = EFFORT[tier]): Promise<Call<Deep>> {
   const t0 = Date.now();
   const model = MODEL_ID[tier];
   const messages = [{ role: 'user' as const, content: [imageBlock(data, media), { type: 'text' as const, text: deepUserText(t) }] }];
-  const output_config = { effort: EFFORT[tier], format: zodOutputFormat(DeepSchema) };
+  const output_config = { effort, format: zodOutputFormat(DeepSchema) };
   try {
     const res =
       tier === 'fable'

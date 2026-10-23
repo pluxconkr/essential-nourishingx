@@ -41,3 +41,6 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# eval photo cache (scripts/eval-router.mjs)
+.cache/
