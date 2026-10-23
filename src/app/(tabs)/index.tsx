@@ -10,6 +10,7 @@ import { greeting, longDate, roundKcal } from '@/domain/format';
 import { addDays } from '@/domain/time';
 import { t } from '@/i18n';
 import { menuForToday } from '@/services/menu';
+import { useAppState } from '@/store/appStore';
 import { cloudEnabled, school, useBalance, useCheckins, useMeals, useToday, useTodayCheckin } from '@/store/derived';
 import { MenuCard, ScoreBox, Suggestion, WeekStrip } from '@/ui/balance-widgets';
 import { Badge, Button, Card, Cell, Footnote, SectionHeader, Subhead } from '@/ui/primitives';
@@ -23,7 +24,8 @@ export default function HomeScreen() {
   const checkins = useCheckins();
   const todayCheckin = useTodayCheckin();
   const todayMeals = useMeals().filter((m) => m.date === today);
-  const menu = menuForToday(today, hour);
+  const menus = useAppState((s) => s.menus);
+  const menu = menuForToday(today, hour, menus);
   const d = balance.derived;
 
   const mealName = menu ? t(`time.meal.${menu.meal}`) : '';

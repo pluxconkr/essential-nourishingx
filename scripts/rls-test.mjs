@@ -97,7 +97,16 @@ try {
   r = await staff.from('checkins').select('*');
   check('staff cannot read student rows', !r.error && r.data.length === 0, JSON.stringify(r.data ?? r.error?.message));
   r = await staff.rpc('staff_overview', { p_days: 7 });
-  check('staff can call staff_overview (small groups suppressed)', !r.error && r.data?.suppressed === true, JSON.stringify(r.data ?? r.error?.message));
+  const ov = r.data;
+  check(
+    'staff_overview: suppressed exactly when under 10 students, never a student id',
+    !r.error && ov && (ov.students >= 10 ? ov.suppressed === false : ov.suppressed === true) && !/user_id|[0-9a-f]{8}-[0-9a-f]{4}-4/.test(JSON.stringify(ov)),
+    JSON.stringify(ov ?? r.error?.message),
+  );
+  // Days before any data (the synthetic cohort covers 30) have under 10 students: count only, no averages.
+  r = await staff.rpc('staff_daily', { p_days: 90 });
+  const quiet = Array.isArray(r.data) ? r.data.filter((d) => d.students < 10) : [];
+  check('staff_daily: every day under 10 students is suppressed with no averages', !r.error && quiet.length > 0 && quiet.every((d) => d.suppressed === true && d.avg_energy === null && d.avg_fullness === null), `${quiet.length} quiet days`);
   for (const fn of ['staff_daily', 'staff_meals', 'staff_ai_spend']) {
     r = await staff.rpc(fn, {});
     check(`staff can call ${fn}`, !r.error, r.error?.message);
@@ -116,8 +125,14 @@ try {
   r = await admin.from('checkins').select('day').eq('user_id', idA);
   check("deleting a student removes the student's rows", !r.error && r.data.length === 0, JSON.stringify(r.data ?? r.error?.message));
 
-  // delete-me ("Delete everything"): only the anonymous student themself; staff and session-less callers are refused
   const status = (res) => String(res.error?.context?.status ?? (res.error ? res.error.message : 'no error'));
+  // weekly-report: staff or the secret key only (the staff path costs a Claude call, so the staff E2E covers it)
+  r = await b.functions.invoke('weekly-report', { body: {} });
+  check('a student cannot run weekly-report', status(r) === '403', status(r));
+  r = await anon.functions.invoke('weekly-report', { body: {} });
+  check('weekly-report refuses a caller without a session', status(r) === '401', status(r));
+
+  // delete-me ("Delete everything"): only the anonymous student themself; staff and session-less callers are refused
   r = await staff.functions.invoke('delete-me', { body: {} });
   check('staff cannot use delete-me', status(r) === '403', status(r));
   r = await anon.functions.invoke('delete-me', { body: {} });

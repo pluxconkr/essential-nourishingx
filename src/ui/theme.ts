@@ -48,7 +48,12 @@ export const MIN_TAP = 44;
 export const fonts = {
   sans: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
   rounded: Platform.select({ ios: 'ui-rounded', android: 'sans-serif', default: 'System' }),
+  /** Staff rule listing only. */
+  mono: Platform.select({ web: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace', ios: 'Menlo', default: 'monospace' }),
 } as const;
+
+/** Staff dashboard (web): sidebar width, readable content width, and the width below which the sidebar folds away. */
+export const STAFF = { sidebar: 244, content: 1080, narrow: 880 } as const;
 
 export const tabular: TextStyle = { fontVariant: ['tabular-nums'] };
 
@@ -71,4 +76,9 @@ export const text = {
   pill: { fontSize: 13, lineHeight: 16, fontWeight: '700' as const, color: colors.crimsonInk },
   button: { fontSize: 17, lineHeight: 22, fontWeight: '600' as const },
   tabLabel: { fontSize: 11, fontWeight: '500' as const },
+  /** Staff dashboard: KPI values, the rule listing, and small table text. */
+  kpi: { fontFamily: fonts.rounded, fontSize: 30, lineHeight: 34, fontWeight: '600' as const, letterSpacing: -0.5, color: colors.ink },
+  mono: { fontFamily: fonts.mono, fontSize: 13, lineHeight: 21, color: colors.ink },
+  table: { fontSize: 14, lineHeight: 19, fontWeight: '400' as const, color: colors.ink },
+  tableHead: { fontSize: 13, lineHeight: 18, fontWeight: '600' as const, color: colors.ink3 },
 } as const;

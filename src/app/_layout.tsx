@@ -56,6 +56,8 @@ export default function RootLayout() {
         </Stack.Protected>
         <Stack.Screen name="health" options={{ presentation: 'modal' }} />
         <Stack.Screen name="privacy" />
+        {/* Web-only staff dashboard; outside the student consent guard. Phones get src/ui/staff/pages/*.tsx stubs that go home. */}
+        <Stack.Screen name="staff" />
       </Stack>
       <ToastHost />
     </>

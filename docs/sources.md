@@ -6,24 +6,29 @@ comment points back to this page.
 ## Food energy and nutrients
 
 **USDA FoodData Central, SR Legacy** (https://fdc.nal.usda.gov). Looked up through the FoodData Central API on
-2026-10-23. Values per 100 g of the food as described. These are the reference points in the meal-analysis prompt
-(`DEEP_SYSTEM` in `supabase/functions/_shared/meal-router.ts`).
+2026-10-23 and checked again, with fibre, against the official SR Legacy CSV download
+(`FoodData_Central_sr_legacy_food_csv_2018-04.zip`, nutrient ids 1008 energy, 1003 protein, 1005 carbohydrate,
+1004 fat, 1079 total dietary fibre) on 2026-10-24. Values per 100 g of the food as described. These are the
+reference points in the meal-analysis prompt (`DEEP_SYSTEM` in `supabase/functions/_shared/meal-router.ts`) and the
+only foods the synthetic cohort's meal photos are made of (`src/domain/synthetic.ts`).
 
-| Food (FoodData Central description) | fdcId | kcal | Protein g | Carbohydrate g | Fat g |
-|---|---|---|---|---|---|
-| Apples, raw, without skin | 171689 | 48 | 0.27 | 12.8 | 0.13 |
-| Bananas, raw | 173944 | 89 | 1.09 | 22.8 | 0.33 |
-| Broccoli, cooked, boiled, drained, without salt | 169967 | 35 | 2.38 | 7.18 | 0.41 |
-| Sweet potato, cooked, baked in skin, flesh, without salt | 168483 | 90 | 2.01 | 20.7 | 0.15 |
-| Potatoes, baked, flesh and skin, without salt | 170093 | 93 | 2.5 | 21.2 | 0.13 |
-| Rice, white, long-grain, regular, enriched, cooked | 168878 | 130 | 2.69 | 28.2 | 0.28 |
-| Couscous, cooked | 169700 | 112 | 3.79 | 23.2 | 0.16 |
-| Pasta, cooked, enriched, without added salt | 169737 | 158 | 5.8 | 30.9 | 0.93 |
-| Chicken, broilers or fryers, breast, meat only, cooked, roasted | 171477 | 165 | 31 | 0 | 3.57 |
-| Egg, white, raw, fresh | 172183 | 52 | 10.9 | 0.73 | 0.17 |
+| Food (FoodData Central description) | fdcId | kcal | Protein g | Carbohydrate g | Fat g | Fibre g |
+|---|---|---|---|---|---|---|
+| Apples, raw, without skin | 171689 | 48 | 0.27 | 12.8 | 0.13 | 1.3 |
+| Apples, raw, with skin | 171688 | 52 | 0.26 | 13.8 | 0.17 | 2.4 |
+| Bananas, raw | 173944 | 89 | 1.09 | 22.8 | 0.33 | 2.6 |
+| Broccoli, cooked, boiled, drained, without salt | 169967 | 35 | 2.38 | 7.18 | 0.41 | 3.3 |
+| Sweet potato, cooked, baked in skin, flesh, without salt | 168483 | 90 | 2.01 | 20.7 | 0.15 | 3.3 |
+| Potatoes, baked, flesh and skin, without salt | 170093 | 93 | 2.5 | 21.2 | 0.13 | 2.2 |
+| Rice, white, long-grain, regular, enriched, cooked | 168878 | 130 | 2.69 | 28.2 | 0.28 | 0.4 |
+| Couscous, cooked | 169700 | 112 | 3.79 | 23.2 | 0.16 | 1.4 |
+| Pasta, cooked, enriched, without added salt | 169737 | 158 | 5.8 | 30.9 | 0.93 | 1.8 |
+| Chicken, broilers or fryers, breast, meat only, cooked, roasted | 171477 | 165 | 31 | 0 | 3.57 | 0 |
+| Egg, white, raw, fresh | 172183 | 52 | 10.9 | 0.73 | 0.17 | 0 |
+| Oil, olive, salad or cooking | 171413 | 884 | 0 | 0 | 100 | 0 |
 
-Oils are about 884 kcal per 100 g, the energy of pure fat (9 kcal/g, below); the validator rejects any food
-denser than 900 kcal per 100 g.
+The prompt's "raw apple 48-52" is the pair without and with skin. Oils are about 884 kcal per 100 g, the energy of
+pure fat (9 kcal/g, below); the validator rejects any food denser than 900 kcal per 100 g.
 
 **Energy factors.** 4 kcal per gram of protein and of carbohydrate, 9 per gram of fat: the general Atwater
 factors that FoodData Central documents for most foods. Dietary fibre yields about 2 kcal per gram

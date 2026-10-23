@@ -424,3 +424,6 @@ verify_jwt = false
 
 [functions.delete-me]
 verify_jwt = false
+
+[functions.weekly-report]
+verify_jwt = false

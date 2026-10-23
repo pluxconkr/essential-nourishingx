@@ -13,6 +13,8 @@ export const KEYS = {
   syncQueue: 'syncQueue',
   /** The student's own analysed meal photos, cached from Supabase (the photos themselves are never kept). */
   meals: 'meals',
+  /** Menu days Dining Services entered on the dashboard (public information), kept for offline use. */
+  menus: 'menus',
 } as const;
 
 export type StoreKey = (typeof KEYS)[keyof typeof KEYS];

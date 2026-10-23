@@ -4,7 +4,7 @@
  */
 import { z } from 'zod';
 
-import type { Checkin, DemoScenario, MealRecord, Prefs } from '@/domain/types';
+import type { Checkin, DemoScenario, MealRecord, MenuDay, Prefs } from '@/domain/types';
 
 import { kv } from './db';
 import { KEYS, REGISTERED_KEYS, SCHEMA_VERSION } from './registry';
@@ -177,6 +177,31 @@ export const mealRepo = {
   },
   remove(id: string): MealRecord[] {
     return this.replaceAll(this.getAll().filter((x) => x.id !== id));
+  },
+};
+
+const MenuItemSchema = z.object({ item: z.string(), station: z.string(), tags: z.array(z.string()) });
+const MenuDaySchema = z.object({ breakfast: z.array(MenuItemSchema), lunch: z.array(MenuItemSchema), dinner: z.array(MenuItemSchema) });
+
+const validMenus = (raw: unknown): Record<string, MenuDay> =>
+  raw && typeof raw === 'object'
+    ? Object.fromEntries(
+        Object.entries(raw).flatMap(([k, v]) => {
+          const p = MenuDaySchema.safeParse(v);
+          return p.success ? [[k, p.data]] : [];
+        }),
+      )
+    : {};
+
+/** Menu days entered by Dining Services, by key: 'weekday', 'weekend' or a YYYY-MM-DD date. Invalid days are dropped. */
+export const menuRepo = {
+  get(): Record<string, MenuDay> {
+    return validMenus(kv.get<unknown>(KEYS.menus));
+  },
+  replaceAll(days: Record<string, unknown>): Record<string, MenuDay> {
+    const next = validMenus(days);
+    kv.set(KEYS.menus, next);
+    return next;
   },
 };
 

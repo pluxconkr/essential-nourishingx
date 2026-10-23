@@ -1,6 +1,7 @@
 /**
- * The hand-maintained menu table (spec §6 menus). Phase 1 ships a weekday / weekend template bundled with the app;
- * the Home footnote says so honestly. Zero external APIs.
+ * The hand-maintained menu table (spec §6 menus). Dining Services enters days on the staff dashboard
+ * (Supabase menu_days, cached on the phone by sync); without them the weekday / weekend template bundled with
+ * the app is used and the Home footnote says so honestly.
  */
 import menuJson from '@/assets/data/menu.json';
 import { weekday } from '@/domain/time';
@@ -31,15 +32,18 @@ export interface TodayMenu {
   source: 'today' | 'template';
 }
 
-export function menuForToday(dateKey: string, hour: number): TodayMenu | null {
+/** `entered` holds the menu days Dining Services entered on the dashboard; they win over the bundled table. */
+export function menuForToday(dateKey: string, hour: number, entered: Record<string, MenuDay> = {}): TodayMenu | null {
   const wd = weekday(dateKey);
-  const day = menu.days[dateKey] ?? menu.days[wd === 0 || wd === 6 ? 'weekend' : 'weekday'];
+  const template = wd === 0 || wd === 6 ? 'weekend' : 'weekday';
+  const dated = entered[dateKey] ?? menu.days[dateKey];
+  const day = dated ?? entered[template] ?? menu.days[template];
   if (!day) return null;
   const meal = mealFor(hour);
   return {
     meal,
     items: day[meal],
     totalItems: day.breakfast.length + day.lunch.length + day.dinner.length,
-    source: menu.days[dateKey] ? 'today' : 'template',
+    source: dated ? 'today' : 'template',
   };
 }

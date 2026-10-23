@@ -9,6 +9,7 @@ jest.mock('@/services/cloud', () => ({
   connect: jest.fn(async () => true),
   uploadCheckins: jest.fn(async (rows: { date: string }[]) => rows.map((r) => r.date)),
   fetchMeals: jest.fn(async () => []),
+  fetchMenus: jest.fn(async () => ({})),
   analyzeMeal: jest.fn(),
   deleteMeal: jest.fn(async () => true),
   deleteCloudAccount: jest.fn(async () => true),
@@ -17,7 +18,8 @@ jest.mock('@/services/cloud', () => ({
 import { kv } from '@/data/db';
 import { KEYS } from '@/data/registry';
 import type { MealRecord } from '@/domain/types';
-import { analyzeMeal, deleteCloudAccount, deleteMeal, fetchMeals, uploadCheckins } from '@/services/cloud';
+import { analyzeMeal, deleteCloudAccount, deleteMeal, fetchMeals, fetchMenus, uploadCheckins } from '@/services/cloud';
+import { menuForToday } from '@/services/menu';
 import { actions, getState, hydrate } from '@/store/appStore';
 
 const today = '2027-10-08';
@@ -54,6 +56,18 @@ test('sync replaces the meal cache with the server rows', async () => {
   expect(getState().meals).toEqual([record]);
   hydrate();
   expect(getState().meals).toEqual([record]);
+});
+
+test("sync keeps Dining Services' menu; a dated entry beats the template, which beats the bundled table", async () => {
+  const day = (item: string) => ({ breakfast: [], lunch: [{ item, station: 'Hot line', tags: [] }], dinner: [] });
+  (fetchMenus as jest.Mock).mockResolvedValueOnce({ weekday: day('Entered weekday soup'), '2027-10-08': day('Entered for today'), broken: { lunch: 'x' } });
+  await actions.sync();
+  expect(Object.keys(getState().menus).sort()).toEqual(['2027-10-08', 'weekday']);
+  hydrate();
+  const menus = getState().menus;
+  expect(menuForToday(today, 12, menus)).toMatchObject({ source: 'today', items: [{ item: 'Entered for today' }] });
+  expect(menuForToday('2027-10-11', 12, menus)).toMatchObject({ source: 'template', items: [{ item: 'Entered weekday soup' }] }); // a Monday
+  expect(menuForToday('2027-10-11', 12, {})?.items[0].item).toBe('Rice bowl (build your own)');
 });
 
 test('an analysed photo is kept; not-food and errors keep nothing', async () => {

@@ -6,7 +6,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 
-import type { Checkin, Meal, MealRecord } from '@/domain/types';
+import type { Checkin, Meal, MealRecord, MenuDay } from '@/domain/types';
 
 import { getSupabase } from './supabase';
 
@@ -113,6 +113,14 @@ export async function analyzeMeal(input: { image: string; mediaType: 'image/jpeg
     return { status: 'error', reason: 'unavailable' };
   }
   return { status: 'error', reason: 'unavailable' };
+}
+
+/** Menu days Dining Services entered for these keys ('weekday', 'weekend', YYYY-MM-DD); null when unreachable. */
+export async function fetchMenus(keys: readonly string[]): Promise<Record<string, MenuDay> | null> {
+  const sb = await getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb.from('menu_days').select('key, meals').in('key', keys);
+  return error ? null : Object.fromEntries((data as { key: string; meals: MenuDay }[]).map((r) => [r.key, r.meals]));
 }
 
 export async function deleteMeal(id: string): Promise<boolean> {

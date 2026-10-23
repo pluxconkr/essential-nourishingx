@@ -1,6 +1,6 @@
 /**
- * Claude calls for the meal router (Deno / Edge Functions only). The key is the ANTHROPIC_API_KEY function
- * secret and never reaches a client. Responses use structured outputs (output_config.format); the text is
+ * Every Claude call (Deno / Edge Functions only): meal triage, meal deep analysis and the weekly report's prose.
+ * The key is the ANTHROPIC_API_KEY function secret and never reaches a client. Responses use structured outputs (output_config.format); the text is
  * parsed here rather than with messages.parse() so token usage is still recorded when parsing fails.
  */
 import Anthropic from '@anthropic-ai/sdk';
@@ -8,6 +8,7 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import type { z } from 'zod';
 
 import { DEEP_SYSTEM, DeepSchema, MAX_TOKENS, MODEL_ID, TRIAGE_SYSTEM, TriageSchema, deepUserText, type Deep, type Tier, type Triage, type Usage } from './meal-router.ts';
+import { PROSE_MAX_TOKENS, PROSE_SYSTEM, ProseSchema, type Prose } from './weekly-prose.ts';
 
 const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY'), maxRetries: 1 });
 
@@ -93,6 +94,23 @@ export async function deep(data: string, media: ImageMedia, t: Triage, tier: Tie
           )
         : await client.messages.create({ model, max_tokens: MAX_TOKENS.deep, output_config, system: DEEP_SYSTEM, messages }, { timeout: timeoutMs });
     const { output, error } = readOutput(DeepSchema, res as unknown as RawResponse);
+    return { output, error, model: res.model, usage: res.usage, latencyMs: Date.now() - t0, stopReason: res.stop_reason };
+  } catch (e) {
+    return failed(model, t0, e);
+  }
+}
+
+/** The weekly report's one prose call (weekly-report). PROSE_MODEL is Claude Opus 5.5 unless the secret says otherwise;
+ * Opus 5.5 always thinks, so max_tokens leaves room for it. A refusal or any other stop reason means the template. */
+export async function writeProse(table: string, timeoutMs: number): Promise<Call<Prose>> {
+  const t0 = Date.now();
+  const model = Deno.env.get('PROSE_MODEL') ?? MODEL_ID.opus;
+  try {
+    const res = await client.messages.create(
+      { model, max_tokens: PROSE_MAX_TOKENS, output_config: { effort: 'low', format: zodOutputFormat(ProseSchema) }, system: PROSE_SYSTEM, messages: [{ role: 'user', content: table }] },
+      { timeout: timeoutMs },
+    );
+    const { output, error } = readOutput(ProseSchema, res as unknown as RawResponse);
     return { output, error, model: res.model, usage: res.usage, latencyMs: Date.now() - t0, stopReason: res.stop_reason };
   } catch (e) {
     return failed(model, t0, e);

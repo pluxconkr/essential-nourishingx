@@ -5,11 +5,11 @@
  */
 import { useSyncExternalStore } from 'react';
 
-import { checkinRepo, demoBackupRepo, initStorage, mealRepo, prefsRepo, syncQueueRepo, timingRepo, wipeStorage } from '@/data/repos';
+import { checkinRepo, demoBackupRepo, initStorage, mealRepo, menuRepo, prefsRepo, syncQueueRepo, timingRepo, wipeStorage } from '@/data/repos';
 import { scenarioCheckins } from '@/domain/demo';
 import { addDays, dateKey } from '@/domain/time';
-import type { Checkin, DemoScenario, Meal, MealRecord, Prefs, Rating, Skipped, Training } from '@/domain/types';
-import { analyzeMeal as analyzeOnServer, connect, deleteCloudAccount, deleteMeal as deleteOnServer, fetchMeals, uploadCheckins, type AnalyzeResult } from '@/services/cloud';
+import type { Checkin, DemoScenario, Meal, MealRecord, MenuDay, Prefs, Rating, Skipped, Training } from '@/domain/types';
+import { analyzeMeal as analyzeOnServer, connect, deleteCloudAccount, deleteMeal as deleteOnServer, fetchMeals, fetchMenus, uploadCheckins, type AnalyzeResult } from '@/services/cloud';
 import { deleteExportFile } from '@/services/export';
 import { cancelReminder, scheduleReminder } from '@/services/notifications';
 
@@ -19,11 +19,13 @@ export interface AppState {
   checkins: Checkin[];
   timing: number[];
   meals: MealRecord[];
+  /** Menu days Dining Services entered, by key; empty means the bundled weekly table. */
+  menus: Record<string, MenuDay>;
 }
 
 type Listener = () => void;
 
-let state: AppState = { hydrated: false, prefs: prefsRepo.get(), checkins: [], timing: [], meals: [] };
+let state: AppState = { hydrated: false, prefs: prefsRepo.get(), checkins: [], timing: [], meals: [], menus: {} };
 const listeners = new Set<Listener>();
 
 function emit() {
@@ -46,7 +48,7 @@ export function subscribe(l: Listener): () => void {
 
 export function hydrate(): AppState {
   initStorage();
-  state = { hydrated: true, prefs: prefsRepo.get(), checkins: checkinRepo.getAll(), timing: timingRepo.getAll(), meals: mealRepo.getAll() };
+  state = { hydrated: true, prefs: prefsRepo.get(), checkins: checkinRepo.getAll(), timing: timingRepo.getAll(), meals: mealRepo.getAll(), menus: menuRepo.get() };
   emit();
   return state;
 }
@@ -107,7 +109,7 @@ export const actions = {
     return record;
   },
 
-  /** Uploads queued check-ins and refreshes the student's meal analyses. Safe to call any time; never throws. */
+  /** Uploads queued check-ins, refreshes the student's meal analyses and today's menu. Safe to call any time; never throws. */
   sync(): Promise<void> {
     if (state.prefs.consentedAt === null) return Promise.resolve();
     syncing ??= (async () => {
@@ -117,6 +119,8 @@ export const actions = {
         if (queued.size && state.prefs.demo === 'live') syncQueueRepo.remove(await uploadCheckins(state.checkins.filter((c) => queued.has(c.date))));
         const meals = await fetchMeals(addDays(dateKey(), -MEAL_DAYS));
         if (meals) setState({ meals: mealRepo.replaceAll(meals) });
+        const menus = await fetchMenus([dateKey(), 'weekday', 'weekend']);
+        if (menus) setState({ menus: menuRepo.replaceAll(menus) });
       } catch {
         /* offline: the queue stays for the next try */
       } finally {
@@ -164,7 +168,7 @@ export const actions = {
     await cancelReminder();
     deleteExportFile();
     wipeStorage();
-    setState({ prefs: prefsRepo.get(), checkins: [], timing: [], meals: [] });
+    setState({ prefs: prefsRepo.get(), checkins: [], timing: [], meals: [], menus: {} });
     return 'done';
   },
 };
