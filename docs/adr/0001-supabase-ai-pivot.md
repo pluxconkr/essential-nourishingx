@@ -60,7 +60,7 @@ flowchart LR
   Anonymous users hold the `authenticated` role, so no policy relies on the role alone.
 - **Staff** never read rows. They call `public.staff_*` wrappers around `private.*` `security definer` functions that check
   `app_metadata.role = 'staff'` and suppress any group with fewer than 10 students. `user_metadata` is never used for authorisation.
-- **AI keys** exist only as Edge Function secrets. `ai_usage` and `ai_budget` have RLS with no client policies.
+- **AI keys** exist only as Edge Function secrets. `ai_usage` and `app_settings` (which holds the budget) have RLS with no client policies.
 - **Deletion**: "Delete everything" calls the `delete-me` function, which removes the student's rows and the anonymous auth user.
 
 ## LLM router
@@ -84,3 +84,19 @@ n ≥ 10 suppression, synthetic data for the dashboard, string review) still app
 - Meal analysis needs a network; check-ins and Balance still work offline.
 - Showing calorie estimates to teenagers carries body-image risk; copy states they are estimates, never sets targets, and the Health Center stays one tap away.
 - Synthetic students (`cohort = 'synthetic'`) fill the dashboard until a real pilot; every staff view labels them.
+
+## Amendments
+
+- **2026-10-23 · routing by evidence.** The router test (`docs/ai-router.md`) showed Fable 5.1 more accurate than
+  Opus 5.5 on every kind of dish (kcal MAPE 0.31 vs 0.66) at a similar speed, so medium photos go to Fable as well:
+  easy → Haiku 5.5, medium and hard → Fable 5.1. Opus 5.5 is the retry for a failed Fable answer, the step-down when
+  the budget runs low, and the weekly report's writer.
+- **2026-10-24 · what the server ended up as.** Three Edge Functions: `analyze-meal`, `delete-me` (accepts anonymous
+  students only; the `on_auth_user_deleted` trigger removes their rows) and `weekly-report`, which imports `src/domain`
+  directly so the report runs the phone's own `balanceFor`. All three verify callers with `@supabase/server` and have
+  the platform's `verify_jwt` off, because the secret key used by scripts is not a JWT.
+- **2026-10-24 · the dashboard is not in the phone app.** Expo Router bundles every file in `src/app` on every
+  platform, so `/staff` routes re-export `src/ui/staff/pages/<page>`, which Metro resolves to the web page on the web
+  and to a stub on phones (`npm run check:bundles` verifies it).
+- **2026-10-24 · the menu.** Dining Services edits `menu_days` on the dashboard; phones cache it on sync and fall back
+  to the bundled weekly table.

@@ -94,7 +94,18 @@ What the tests caught:
 - Nutrition5k photos are small (640 × 480) and taken straight down; phone photos at an angle may behave
   differently. The router has not been tested on real NourishingX student photos yet.
 - Calories from a photo are estimates. The app always shows them as a range.
-- Total spent on all of these tests: USD 6.01 of the USD 20 budget (from the `ai_usage` ledger).
+- Spent on the router tests above: USD 6.01 of the USD 20 budget (from the `ai_usage` ledger, 2026-10-23).
+
+## The only other place Claude is used
+
+The weekly staff report (`supabase/functions/weekly-report`) makes **one** call to Claude Opus 5.5 per week. It sees
+only a table of group counts — never a photo or a row — and code checks its answer: at most 180 words, every number
+copied from the table, no causal or health words, "participants" rather than "students". Anything that fails is
+replaced by a template. About USD 0.015 a report. See [staff-dashboard.md](staff-dashboard.md#the-weekly-report).
+
+All Claude calls live in one file, `supabase/functions/_shared/claude.ts` (triage, deep analysis, weekly prose), and
+every one writes a ledger row. Total spent so far on everything — router tests, end-to-end tests and weekly
+reports — USD 6.52 of USD 20 (2026-10-24).
 
 ## Run it yourself
 
