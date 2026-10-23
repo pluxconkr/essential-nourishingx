@@ -28,6 +28,7 @@ export const staffStrings = {
   // ---- common ----
   'common.suppressed': 'Fewer than 10 participants, so nothing is shown',
   'common.suppressed.table': 'One of these groups has fewer than 10 participants, so the table is not shown: its size could be worked out from the total',
+  'common.pending': 'No week is published yet. Regenerate on the Weekly overview writes the report for {from} to {to}, and the week’s numbers appear with it.',
   'common.unavailable': 'Could not load this. Check the connection and refresh.',
   'common.window': '{from} to {to}',
   'report.synthetic': 'Synthetic data · {share} of this report’s participants are simulated students',
@@ -46,7 +47,7 @@ export const staffStrings = {
 
   // ---- weekly overview ----
   'overview.title': 'Weekly overview',
-  'overview.subtitle': 'The latest complete week, Monday {from} to Sunday {to}, school time (New Hampshire). A week appears once no more check-ins can arrive for it.',
+  'overview.subtitle': 'The latest published week, Monday {from} to Sunday {to}, school time (New Hampshire). A week is published with its weekly report, once no more check-ins can arrive for it, and never changes after.',
   'overview.kpis.title': 'The week at a glance',
   'kpi.participants': 'Participants',
   'kpi.participants.foot': 'checked in on a day shown',
@@ -70,9 +71,9 @@ export const staffStrings = {
   'overview.prose.regenerate': 'Regenerate the report',
   'overview.prose.working': 'Counting the shared rules’ words, then one call to Claude',
   'overview.prose.failed': 'The report could not be written. Nothing was changed.',
-  'overview.prose.cached': 'The stored report is shown: an AI summary of a closed week is final, and a template report can be retried 15 minutes after it was written.',
-  'overview.daily.title': 'Daily means, the last 30 final days',
-  'overview.daily.foot': 'Means of 1–5 self-reports. A day is final once no more check-ins can arrive for it; days with fewer than 10 participants are left blank.',
+  'overview.prose.cached': 'The stored report is shown: an AI summary of a published week is final, and a template report can be retried 15 minutes after it was written.',
+  'overview.daily.title': 'Daily means, 30 days up to the published week',
+  'overview.daily.foot': 'Means of 1–5 self-reports. Days of weeks not yet published, and days with fewer than 10 participants, are left blank.',
   'overview.weekday.title': 'Energy by day of week',
   'overview.weekday.foot': 'Mean of the daily means over those 30 days; blank days are left out.',
   'overview.honest.title': 'Reading this dashboard honestly',
@@ -122,7 +123,7 @@ export const staffStrings = {
 
   // ---- menu performance ----
   'menu.title': 'Menu performance',
-  'menu.subtitle': 'What participants photographed in the latest complete week · estimates, not measurements',
+  'menu.subtitle': 'What participants photographed in the latest published week · estimates, not measurements',
   'menu.slots.title': 'By meal',
   'col.meal': 'Meal',
   'col.photos': 'Photos',
@@ -157,7 +158,7 @@ export const staffStrings = {
 
   // ---- meal photos & AI ----
   'meals.title': 'Meal photos & AI',
-  'meals.subtitle': 'How the photo router worked in the latest complete week, and what the AI has cost so far',
+  'meals.subtitle': 'How the photo router worked in the latest published week, and what the AI has cost so far',
   'meals.photos': 'Photos analysed',
   'meals.photos.foot': '{from} to {to} · in meal slots with 10 or more participants',
   'meals.lowConf': 'Low-confidence estimates',

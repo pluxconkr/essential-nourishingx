@@ -97,20 +97,29 @@ away. So every staff number now follows three rules:
 
 | Rule | What it stops |
 |---|---|
-| **Closed weeks only.** Staff see the latest Monday-to-Sunday week whose Sunday is *final*: no check-in or meal photo can still arrive for it (see the upload window below). There is no window to choose. | Overlapping windows, and before/after polling |
+| **Closed weeks only, published once.** Staff see the latest published Monday-to-Sunday week. A week can be published only once its Sunday is *final*: no check-in or meal photo can still arrive for it (see the upload window below). There is no window to choose. | Overlapping windows, and before/after polling |
 | **Shown days only.** A day is part of a week's totals, and its students count as participants, only if it has 10 or more students of its own; a quieter day is left out, never subtracted. | "Week minus the visible days", and two participant counts that differ by the one student seen only on a quiet day |
 | **No small exact counts.** A suppressed group carries no count at all, not even "3 students". | Aiming an attack at a tiny group |
 
-The daily chart ends on the last final day, and the weekly report (`weekly-report`) uses the same closed weeks, so a
-report never changes once written and two reports never overlap.
+**Published once, all together.** A closed week can still lose rows: a student may delete a meal estimate, a check-in
+or the whole account, and that is their right. If any number about a week were worked out again after a deletion,
+the two versions would differ by that student's rows. An earlier attempt stored each kind of number the first time it
+was asked for, but a day was stored as soon as it was final and its week only after the week closed, so a deletion in
+between still showed up as the difference (found by review, 2026-10-24). Now a week is published in one go
+(`supabase/migrations/20261023192805_publish_weeks_once.sql`):
 
-**Kept as first shown.** A closed week can still lose rows: a student may delete a meal estimate, a check-in or the
-whole account, and that is their right. If the totals were recomputed, the same week seen before and after a
-deletion would give that student's rows away. So the first time staff ask for a closed week (or a final day of the
-daily chart), the answer is stored (`private.staff_snapshots`,
-`supabase/migrations/20261023190830_staff_week_snapshots.sql`) and every later answer is that one. A weekly report
-whose prose fell back to the template can ask the model again, but about the stored numbers. The stored answers are
-group totals only — exactly what staff were already shown — and the student's own rows are still deleted.
+1. `freeze_week` stores the week's overview, its meal-photo numbers and its seven days, in one database transaction,
+   and returns, from that same transaction, the rows the weekly report is worked out from.
+2. The weekly-report function works out the report from exactly those rows. The report's "previous week" is the
+   previous week's published report, never worked out again.
+3. `publish_week` stores the report only if that freeze is still the latest one. Storing the report is what publishes
+   the week.
+
+Staff read published weeks only: nothing about a week, not even one of its days, is shown before it is published,
+and nothing about it changes afterwards. The daily chart ends on the Sunday of the latest published week; a day of a
+week that is not published is left blank. A report whose prose fell back to the template can ask the model again, but
+about the published numbers. The stored numbers (`private.staff_snapshots`) are group totals only — exactly what staff
+are shown — and the student's own rows are still deleted.
 
 The meal-photo numbers follow one more rule (`supabase/migrations/20261023185644_staff_meals_shared_rows.sql`):
 **every number covers the same photos**, those of meal slots with 10 or more participants of their own. Otherwise the
@@ -187,18 +196,18 @@ The order matters, and a few details keep it honest:
 ## How it is tested
 
 `npm run test:rls` (`scripts/rls-test.mjs`) creates two anonymous students and a staff account on the real project
-and tries 47 things, for example:
+and tries 48 things, for example:
 
 - someone with no sign-in cannot read check-ins;
 - student B cannot read, change or delete student A's rows;
 - a student cannot insert a meal estimate, mark a row synthetic, read the AI ledger, reserve AI budget or call a
   staff function;
 - a check-in from 2 days ago is accepted, but one 10 days old or 3 days ahead is refused;
-- staff read 0 check-in rows, cannot read the raw AI ledger, and get totals only — for the latest closed
-  Monday-to-Sunday week, with no count when suppressed, the same answer every time, and no way to clear the stored
-  totals;
+- staff read 0 check-in rows, cannot read the raw AI ledger, and get totals only — for the latest published
+  Monday-to-Sunday week, with no count when suppressed, the same answer every time, and no way to freeze or publish a
+  week themselves;
 - a day with fewer than 10 students comes back with neither its count nor its averages, and the daily list ends on
-  the last final day;
+  the Sunday of that week;
 - a deleted student's still-valid token cannot write a check-in, and no meal estimate is stored for a deleted account;
 - `delete-me` refuses staff and callers without a sign-in, deleting removes the rows, and a repeat still answers
   "deleted";

@@ -52,8 +52,8 @@ function byWeekday(rows: DailyRow[]): { day: string; mean: number }[] {
 }
 
 export default function StaffOverview() {
-  const [overview] = useLoad(staffOverview);
-  const [daily] = useLoad(staffDaily);
+  const [overview, reloadOverview] = useLoad(staffOverview);
+  const [daily, reloadDaily] = useLoad(staffDaily);
   const [reports, reloadReports] = useLoad(loadReports);
   const [writing, setWriting] = useState<'idle' | 'working' | 'failed' | 'cached'>('idle');
 
@@ -61,8 +61,9 @@ export default function StaffOverview() {
     setWriting('working');
     const r = await generateReport();
     setWriting(!r ? 'failed' : r.cached ? 'cached' : 'idle');
-    await reloadReports();
-  }, [reloadReports]);
+    // A first report publishes its week, so the week's numbers and days appear with it.
+    await Promise.all([reloadReports(), reloadOverview(), reloadDaily()]);
+  }, [reloadReports, reloadOverview, reloadDaily]);
 
   const o = overview.status === 'ready' ? overview.data : null;
   const report = reports.status === 'ready' ? reports.data[0] : undefined;
@@ -73,7 +74,8 @@ export default function StaffOverview() {
     <StaffPage title={ts('overview.title')} subtitle={o ? ts('overview.subtitle', { from: o.from, to: o.to }) : undefined} testID="staff-overview">
       <Section title={ts('overview.kpis.title')}>
         {overview.status === 'error' ? <Callout icon="info">{ts('common.unavailable')}</Callout> : null}
-        {o?.suppressed ? <Callout icon="lock">{ts('common.suppressed')}</Callout> : null}
+        {o?.pending ? <Callout icon="info">{ts('common.pending', { from: o.from, to: o.to })}</Callout> : null}
+        {o?.suppressed && !o.pending ? <Callout icon="lock">{ts('common.suppressed')}</Callout> : null}
         {o && !o.suppressed ? (
           <Grid>
             <Kpi label={ts('kpi.participants')} value={String(o.students)} foot={ts('kpi.participants.foot')} testID="kpi-participants" />

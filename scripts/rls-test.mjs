@@ -82,8 +82,8 @@ try {
   check('student cannot write a check-in 3 days ahead', denied(r.error), r.error?.message);
   r = await a.rpc('reserve_ai', { p_user: idA, p_fn: 'analyze-meal', p_stage: 'triage', p_model: 'x', p_worst_usd: 0, p_daily_limit: null });
   check('student cannot reserve AI budget', denied(r.error), r.error?.message);
-  r = await a.rpc('clear_staff_snapshots', { p_from: '2026-01-01', p_to: '2026-12-31' });
-  check('student cannot clear the stored staff totals', denied(r.error), r.error?.message);
+  r = await a.rpc('freeze_week', { p_week_end: '2026-10-18' });
+  check('student cannot freeze a week', denied(r.error), r.error?.message);
   r = await a.from('meal_analyses').insert({ user_id: idA, day: today, meal: 'lunch', items: [], kcal: 1, kcal_low: 1, kcal_high: 1, protein_g: 0, carbs_g: 0, fat_g: 0, fiber_g: 0, difficulty: 'easy', tier: 'haiku', confidence: 'low' });
   check('student cannot fabricate meal analyses', denied(r.error), r.error?.message);
   r = await a.from('ai_usage').select('*');
@@ -113,24 +113,28 @@ try {
   r = await staff.rpc('staff_overview');
   const ov = r.data;
   const finalDay = addDays(today, -UPLOAD_DAYS - 1);
+  // A published week (or, before any is published, the latest closed week marked pending with no numbers).
   check(
-    'staff_overview: the latest closed Monday-to-Sunday week, no count when suppressed, never a student id',
-    !r.error && ov && weekday(ov.to) === 0 && ov.to <= finalDay && addDays(ov.to, 7) > finalDay && ov.from === addDays(ov.to, -6) &&
-      (ov.suppressed ? ov.students === null : ov.students >= 10) && !/user_id|[0-9a-f]{8}-[0-9a-f]{4}-4/.test(JSON.stringify(ov)),
+    'staff_overview: a closed Monday-to-Sunday week, no count when suppressed or pending, never a student id',
+    !r.error && ov && weekday(ov.to) === 0 && ov.to <= finalDay && ov.from === addDays(ov.to, -6) &&
+      (ov.pending ? ov.students === null && addDays(ov.to, 7) > finalDay : ov.suppressed ? ov.students === null : ov.students >= 10) &&
+      !/user_id|[0-9a-f]{8}-[0-9a-f]{4}-4/.test(JSON.stringify(ov)),
     JSON.stringify(ov ?? r.error?.message),
   );
-  // Final days only; days before any data (the synthetic cohort covers 30) have under 10 students: no count, no averages.
+  // Days of published weeks only; any other day, and a day under 10 students: no count, no averages.
   r = await staff.rpc('staff_daily', { p_days: 90 });
   const quiet = Array.isArray(r.data) ? r.data.filter((d) => d.suppressed) : [];
-  check('staff_daily: ends on the last final day', Array.isArray(r.data) && r.data.at(-1)?.day === finalDay, JSON.stringify(r.data?.at(-1) ?? r.error?.message));
+  check("staff_daily: ends on the overview week's Sunday", Array.isArray(r.data) && r.data.at(-1)?.day === ov?.to, JSON.stringify(r.data?.at(-1) ?? r.error?.message));
   check('staff_daily: a day under 10 students shows neither its count nor averages', !r.error && quiet.length > 0 && quiet.every((d) => d.students === null && d.avg_energy === null && d.avg_fullness === null), `${quiet.length} quiet days`);
   r = await staff.rpc('report_week');
   check('staff cannot call report_week (service role only)', denied(r.error), r.error?.message);
-  // A closed week is kept as first shown, so staff cannot make it recompute after a student deletes rows.
-  r = await staff.rpc('clear_staff_snapshots', { p_from: '2026-01-01', p_to: '2026-12-31' });
-  check('staff cannot clear the stored staff totals (service role only)', denied(r.error), r.error?.message);
+  // A week is published once, by the weekly-report function, so staff cannot freeze or publish one themselves.
+  r = await staff.rpc('freeze_week', { p_week_end: ov?.to ?? '2026-10-18' });
+  check('staff cannot freeze a week (service role only)', denied(r.error), r.error?.message);
+  r = await staff.rpc('publish_week', { p_week_end: ov?.to ?? '2026-10-18', p_made_at: new Date().toISOString(), p_report: {} });
+  check('staff cannot publish a week (service role only)', denied(r.error), r.error?.message);
   const again = await staff.rpc('staff_overview');
-  check('staff_overview gives the same closed week again', !again.error && JSON.stringify(again.data) === JSON.stringify(ov), JSON.stringify(again.data ?? again.error?.message));
+  check('staff_overview gives the same published week again', !again.error && JSON.stringify(again.data) === JSON.stringify(ov), JSON.stringify(again.data ?? again.error?.message));
   for (const fn of ['staff_daily', 'staff_meals', 'staff_ai_spend']) {
     r = await staff.rpc(fn, {});
     check(`staff can call ${fn}`, !r.error, r.error?.message);

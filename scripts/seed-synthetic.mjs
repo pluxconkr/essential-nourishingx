@@ -3,9 +3,9 @@
  * Seeds the synthetic cohort (src/domain/synthetic.ts) into Supabase so the staff dashboard has 60 simulated
  * students × 30 days to show before a pilot (plan "seed-synthetic"; ADR 0001). Every row has cohort = 'synthetic';
  * real rows are never touched. Re-running replaces the synthetic rows, and the weekly reports built from them, with a
- * fresh 30 days ending on the Sunday of the latest closed week (public.report_week(), the week staff see), then writes
- * that week's report and the three before it through the weekly-report function: the earlier weeks from the
- * template, the latest with its one prose call.
+ * fresh 30 days ending on the Sunday of the latest closed week (public.report_week()), then writes that week's report
+ * and the three before it through the weekly-report function, oldest first, which publishes each week: the earlier
+ * weeks from the template, the latest with its one prose call.
  * Synthetic and real rows never share a day. Anyone with this repo can regenerate the synthetic answers (seed 2027),
  * so on a shared day subtracting them from the staff totals would give the real students' answers back (code review
  * 2026-10-24). Real students can write only open days (the upload window) and the seed writes only closed ones, so the
@@ -46,16 +46,11 @@ if (!clearOnly) {
   }
 }
 
-const synthDay = async (ascending) => (await must('read the synthetic days', admin.from('checkins').select('day').eq('cohort', 'synthetic').order('day', { ascending }).limit(1)))[0]?.day;
-const oldFrom = await synthDay(true);
-const oldTo = await synthDay(false);
 await must('remove synthetic check-ins', admin.from('checkins').delete().eq('cohort', 'synthetic'));
 await must('remove synthetic meal estimates', admin.from('meal_analyses').delete().eq('cohort', 'synthetic'));
-// A report counts synthetic participants in syntheticShare; one built only from real rows has 0 and stays.
+// Deleting a week's report unpublishes it (staff read published weeks only), and the next report freezes the week
+// afresh. A report counts synthetic participants in syntheticShare; one built only from real rows has 0 and stays.
 await must('remove synthetic weekly reports', admin.from('weekly_reports').delete().gt('aggregates->>syntheticShare', '0'));
-// Staff numbers are kept as first shown (private.staff_snapshots); those covering the old or new synthetic days go.
-const span = [oldFrom, oldTo, ...(clearOnly ? [] : [from, weekEnd])].filter(Boolean).sort();
-if (span.length) await must('clear staff snapshots', admin.rpc('clear_staff_snapshots', { p_from: span[0], p_to: span.at(-1) }));
 if (clearOnly) {
   console.log('Removed the synthetic cohort and its weekly reports.');
   process.exit(0);

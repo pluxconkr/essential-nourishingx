@@ -3,14 +3,15 @@
  * Callers: a staff member (JWT with app_metadata.role = 'staff' — the dashboard's Regenerate, the latest closed week
  * only) or the secret key (scripts/seed-synthetic.mjs backfilling earlier weeks). Body: { week_end?: a Sunday no later
  * than the latest closed week's, prose?: boolean }. Weeks are Monday to Sunday and closed (public.report_week()): no
- * check-in or meal photo can still arrive for them, so a report never changes under a re-run and two reports cannot be
- * subtracted to isolate a day (security review 2026-10-24).
- * Reads the check-ins and meal estimates the hysteresis needs (six weeks) with the service role, runs cohortReport —
- * the phone's own balanceFor on every participant — and keeps only counts; a week under 10 participants stores only
- * that fact. Then at most one prose call (PROSE_MODEL, reserved in the ai_usage ledger) on the formatted,
- * already-suppressed table; prose that fails checkProse is replaced by templateProse. Upserts public.weekly_reports and
- * returns the row. verify_jwt is off (supabase/config.toml) because the secret key is not a JWT; withSupabase checks
- * every caller.
+ * check-in or meal photo can still arrive for them.
+ * Writing a week's first report is what publishes the week, all at once (security review 2026-10-24): freeze_week
+ * stores the week's staff numbers and returns, from the same transaction, the check-ins and meal estimates the report
+ * needs; cohortReport — the phone's own balanceFor on every participant — turns them into counts (a week under 10
+ * participants keeps only that fact); the previous week's numbers are its published report, never recomputed; then at
+ * most one prose call (PROSE_MODEL, reserved in the ai_usage ledger) on the formatted, already-suppressed table, with
+ * templateProse when checkProse fails; publish_week stores the report only if that freeze is still the latest. A
+ * published week never changes: a template report may ask the model again, about the same numbers. verify_jwt is off
+ * (supabase/config.toml) because the secret key is not a JWT; withSupabase checks every caller.
  */
 import { withSupabase } from '@supabase/server';
 import { z } from 'zod';
@@ -32,41 +33,19 @@ const Body = z.object({
   prose: z.boolean().optional(),
 });
 
-/** A closed week's model prose is final. A template report (the model refused, failed the checks or was over budget)
- * may ask the model again from the dashboard, at most once in this window, about the same stored numbers. */
+/** A published week's model prose is final. A template report (the model refused, failed the checks or was over
+ * budget) may ask the model again from the dashboard, at most once in this window, about the same numbers. */
 const COOLDOWN_MS = 15 * 60_000;
-const PAGE = 1000;
 
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 
-interface CheckinRow {
-  user_id: string;
-  day: string;
-  fullness: Rating;
-  energy: Rating;
-  focus: Rating;
-  training: Training;
-  skipped: Skipped;
-  cohort: 'real' | 'synthetic';
+/** What freeze_week returns: the moment of the freeze and the rows read in that transaction. */
+interface Frozen {
+  made_at: string;
+  checkins: { user_id: string; day: string; fullness: Rating; energy: Rating; focus: Rating; training: Training; skipped: Skipped; cohort: 'real' | 'synthetic' }[];
+  meals: { user_id: string; day: string; meal: Meal; protein_g: number; carbs_g: number }[];
 }
-interface MealRow {
-  user_id: string;
-  day: string;
-  meal: Meal;
-  protein_g: number | string;
-  carbs_g: number | string;
-}
-
-/** PostgREST returns at most 1000 rows per request, so read in pages. */
-async function every<T>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>): Promise<T[] | null> {
-  const out: T[] = [];
-  for (let from = 0; ; from += PAGE) {
-    const { data, error } = await page(from, from + PAGE - 1);
-    if (error || !data) return null;
-    out.push(...data);
-    if (data.length < PAGE) return out;
-  }
-}
+type Stored = CohortReport & { previous?: CohortReport | null };
 
 export default {
   fetch: withSupabase({ auth: ['user', 'secret'], errors: { detailed: false } }, async (req, ctx) => {
@@ -86,29 +65,32 @@ export default {
     const weekStart = addDays(weekEnd, -6);
 
     const { data: existing } = await admin.from('weekly_reports').select('*').eq('week_start', weekStart).maybeSingle();
-    if (!service && existing && (existing.prose_source === 'model' || Date.now() - Date.parse(existing.generated_at) < COOLDOWN_MS)) {
+    if (existing && (service || existing.prose_source === 'model' || Date.now() - Date.parse(existing.generated_at) < COOLDOWN_MS)) {
       return json({ report: existing, cached: true });
     }
 
-    // A closed week's numbers stay as first written for staff: retrying a template report rewrites only the prose, so
-    // a student deleting rows later can never show up as the difference between two versions of the report.
     let week: CohortReport;
-    let previous: CohortReport;
-    if (!service && existing) {
-      ({ previous, ...week } = existing.aggregates as CohortReport & { previous: CohortReport });
+    let previous: CohortReport | null | undefined;
+    let madeAt: string | null = null;
+    if (existing) {
+      // Published: a template retry rewrites the prose about the numbers it published, which never change.
+      ({ previous, ...week } = existing.aggregates as Stored);
     } else {
-      // This week and the previous one, each with the 30-day history their hysteresis reads plus a 7-day window.
-      const since = addDays(weekEnd, -43);
-      const checkinRows = await every<CheckinRow>((a, b) =>
-        admin.from('checkins').select('user_id, day, fullness, energy, focus, training, skipped, cohort').gte('day', since).lte('day', weekEnd).order('user_id').order('day').range(a, b),
-      );
-      const mealRows = await every<MealRow>((a, b) => admin.from('meal_analyses').select('user_id, day, meal, protein_g, carbs_g').gte('day', since).lte('day', weekEnd).order('id').range(a, b));
-      if (!checkinRows || !mealRows) return json({ error: 'unavailable' }, 503);
-      const checkins: CohortCheckin[] = checkinRows.map((r) => ({ userId: r.user_id, date: r.day, fullness: r.fullness, energy: r.energy, focus: r.focus, training: r.training, skipped: r.skipped, synthetic: r.cohort === 'synthetic' }));
-      // numeric columns arrive as strings from PostgREST
-      const meals: CohortMeal[] = mealRows.map((r) => ({ userId: r.user_id, date: r.day, meal: r.meal, protein_g: Number(r.protein_g), carbs_g: Number(r.carbs_g) }));
+      const { data: frozen, error: freezeError } = await admin.rpc('freeze_week', { p_week_end: weekEnd });
+      if (freezeError) return json({ error: 'unavailable' }, 503);
+      if (!frozen) {
+        // Another call published the week in the meantime.
+        const { data: now } = await admin.from('weekly_reports').select('*').eq('week_start', weekStart).maybeSingle();
+        return now ? json({ report: now, cached: true }) : json({ error: 'unavailable' }, 503);
+      }
+      const f = frozen as Frozen;
+      madeAt = f.made_at;
+      const checkins: CohortCheckin[] = f.checkins.map((r) => ({ userId: r.user_id, date: r.day, fullness: r.fullness, energy: r.energy, focus: r.focus, training: r.training, skipped: r.skipped, synthetic: r.cohort === 'synthetic' }));
+      const meals: CohortMeal[] = f.meals.map((r) => ({ userId: r.user_id, date: r.day, meal: r.meal, protein_g: Number(r.protein_g), carbs_g: Number(r.carbs_g) }));
       week = cohortReport(checkins, meals, weekEnd);
-      previous = cohortReport(checkins, meals, addDays(weekEnd, -7));
+      // The previous week as it was published, so two reports never disagree about it (none: not published).
+      const { data: prev } = await admin.from('weekly_reports').select('aggregates').eq('week_start', addDays(weekStart, -7)).maybeSingle();
+      previous = prev ? ({ ...(prev.aggregates as Stored), previous: undefined } as CohortReport) : null;
     }
 
     let prose: Prose = templateProse(week, previous);
@@ -129,16 +111,25 @@ export default {
       }
     }
 
-    const row = {
-      week_start: weekStart,
+    const report = {
       aggregates: { ...week, previous, proseConfidence: prose.confidence, proseWhy: prose.why },
       prose: prose.paragraphs.join('\n\n'),
       prose_source: source,
       model,
-      generated_at: new Date().toISOString(),
     };
-    const { data: saved, error } = await admin.from('weekly_reports').upsert(row).select('*').single();
-    if (error || !saved) return json({ error: 'save_failed' }, 500);
+    if (existing) {
+      const { data: saved, error } = await admin
+        .from('weekly_reports')
+        .update({ ...report, generated_at: new Date().toISOString() })
+        .eq('week_start', weekStart)
+        .select('*')
+        .single();
+      if (error || !saved) return json({ error: 'save_failed' }, 500);
+      return json({ report: saved, cached: false });
+    }
+    const { data: saved, error } = await admin.rpc('publish_week', { p_week_end: weekEnd, p_made_at: madeAt, p_report: report });
+    // null: a later freeze of this week replaced this one, and that call publishes.
+    if (error || !saved) return json({ error: 'save_failed' }, error ? 500 : 409);
     return json({ report: saved, cached: false });
   }),
 };

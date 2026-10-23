@@ -65,12 +65,14 @@ async function rpc<T>(fn: string, args: Record<string, unknown> = {}): Promise<T
   return error ? null : (data as T);
 }
 
-/** The latest closed Monday-to-Sunday week, from days with at least 10 participants of their own. A suppressed week
- * carries no count (null): an exact number under 10 is itself disclosive. */
+/** The latest published Monday-to-Sunday week (published with its weekly report, all numbers frozen together), from
+ * days with at least 10 participants of their own. A suppressed week carries no count (null): an exact number under
+ * 10 is itself disclosive. `pending`: no week is published yet, so there are no numbers at all. */
 export interface Overview {
   from: string;
   to: string;
   days: number;
+  pending?: boolean;
   days_shown?: number;
   students: number | null;
   suppressed: boolean;
@@ -98,6 +100,7 @@ export interface DailyRow {
 export interface MealsSummary {
   from: string;
   to: string;
+  pending?: boolean;
   students: number | null;
   suppressed: boolean;
   analyses?: number;
@@ -139,8 +142,9 @@ export async function latestReports(limit: number): Promise<WeeklyReport[] | nul
   return error ? null : (data as WeeklyReport[]);
 }
 
-/** Runs the weekly-report Edge Function for the latest closed week (staff JWT). `cached` means the stored report was
- * returned: model prose for a closed week is final, and a template report is retried at most every 15 minutes. */
+/** Runs the weekly-report Edge Function for the latest closed week (staff JWT); its first report publishes the week.
+ * `cached` means the stored report was returned: model prose is final, and a template report is retried at most every
+ * 15 minutes. */
 export async function generateReport(): Promise<{ report: WeeklyReport; cached: boolean } | null> {
   const sb = staffClient();
   if (!sb) return null;

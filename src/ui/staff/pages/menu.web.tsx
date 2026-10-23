@@ -44,7 +44,7 @@ export default function StaffMenu() {
   return (
     <StaffPage title={ts('menu.title')} subtitle={ts('menu.subtitle')} testID="staff-menu">
       {meals.status === 'error' ? <Callout icon="info">{ts('common.unavailable')}</Callout> : null}
-      {m?.suppressed ? <Callout icon="lock">{ts('common.suppressed')}</Callout> : null}
+      {m?.suppressed ? <Callout icon={m.pending ? 'info' : 'lock'}>{m.pending ? ts('common.pending', { from: m.from, to: m.to }) : ts('common.suppressed')}</Callout> : null}
 
       {m && !m.suppressed ? (
         <>

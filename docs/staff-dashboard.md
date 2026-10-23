@@ -21,7 +21,7 @@ under its own storage key, so it never replaces a student session in the same br
 
 | View | Route | What it shows | Where the numbers come from |
 |---|---|---|---|
-| Weekly overview | `/staff` | Participants, days shown, check-ins each, mean energy / fullness / focus (with last week), skipped meals, heavy training; the weekly report in prose; the last 30 final days of daily means; energy by day of week | `staff_overview()`, `staff_daily(30)`, the latest row of `weekly_reports` |
+| Weekly overview | `/staff` | Participants, days shown, check-ins each, mean energy / fullness / focus (with last week), skipped meals, heavy training; the weekly report in prose; 30 days of daily means up to the published week; energy by day of week | `staff_overview()`, `staff_daily(30)`, the latest row of `weekly_reports` |
 | Menu performance | `/staff/menu` | Photographed meals by slot (photos, participants, average kcal, protein, carbohydrate, fat, fibre); food groups on plates; actions when an average falls below published guidance; today's menu | `staff_meals()`, `menu_days` |
 | Meal photos & AI | `/staff/meals` | Which model did the deep analysis and how hard the photos were (each table only when every group in it has 10 or more participants), low-confidence estimates, AI spend against the USD 20 cap, the router test result | `staff_meals()`, `staff_ai_spend()`, [ai-router.md](ai-router.md) |
 | Menu table & reminder | `/staff/ops` | Edit the weekday and weekend templates or a dated day; the reminder policy | `menu_days` (staff can edit; everyone can read) |
@@ -36,12 +36,13 @@ its own label, so an older synthetic report is never mistaken for real students.
 
 ### Which week?
 
-Every number is for the **latest complete week, Monday to Sunday**, and only once it is *final*: students can send a
-check-in for the last 2 days only, so a week appears three days after its Sunday. A day counts only if 10 or more
-participants checked in on it (*Days shown* says how many of the 7 did). There is no way to pick another window,
-and a closed week's numbers are kept as first shown, even if a student later deletes their rows.
-This is deliberate: live or overlapping totals could be subtracted from each other to reveal one student's check-in
-([security-and-privacy.md](security-and-privacy.md#why-closed-weeks)).
+Every number is for the **latest published week, Monday to Sunday**. A week can be published once it is *final*:
+students can send a check-in for the last 2 days only, so a week can be published three days after its Sunday. It is
+published by its weekly report (Regenerate, or the seed), and all of its numbers, its seven days and its report are
+taken together at that moment and never change after, even if a student later deletes their rows. A day counts only
+if 10 or more participants checked in on it (*Days shown* says how many of the 7 did). There is no way to pick another
+window. This is deliberate: live, overlapping or separately taken totals could be subtracted from each other to reveal
+one student's check-in ([security-and-privacy.md](security-and-privacy.md#why-closed-weeks)).
 
 ### Why there is no list of students
 
@@ -90,9 +91,10 @@ confidence with "only *two* weeks are available" — a number the table does not
 loosen the check, the instructions now tell the model to say "this week and the previous week" instead of counting
 the weeks; four tries in a row then passed.
 
-**Regenerate** on the overview runs the function for the latest closed week. Because that week can no longer change,
-an AI-written report of it is final: Regenerate shows it again without another call. A report that fell back to the
-template can ask the model again, at most once every 15 minutes.
+**Regenerate** on the overview runs the function for the latest closed week. If that week has no report yet, this
+publishes it: its numbers appear on every view with the report. Once published, an AI-written report is final:
+Regenerate shows it again without another call. A report that fell back to the template can ask the model again, at
+most once every 15 minutes, about the same published numbers.
 
 ## The synthetic cohort
 

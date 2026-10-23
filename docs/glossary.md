@@ -17,8 +17,11 @@ in it.
 **Clause** — one rule in the rule list (A, B1–B3, C1–C6, D). The first clause that matches chooses the word.
 
 **Closed week** — a Monday-to-Sunday week that can no longer change, because no check-in may still be sent for any of
-its days (see *upload window*). Staff only ever see closed weeks, so two of their numbers can never be subtracted to
-reveal one student's check-in.
+its days (see *upload window*). Only closed weeks can be published.
+
+**Published week** — a closed week whose weekly report has been written. All of its staff numbers, its seven days and
+its report are taken at that one moment and never change after, so two of them can never be subtracted to reveal one
+student's check-in. Staff see nothing about a week before it is published.
 
 **Cohort** — a group of students counted together. Rows are marked `real` or `synthetic` (simulated).
 

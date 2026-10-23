@@ -155,7 +155,7 @@ labelled as an estimate. Details and every test run: [docs/ai-router.md](docs/ai
 "Delete everything" on the phone calls the `delete-me` function, which deletes the anonymous account; a database
 trigger then removes every row it owned. Staff numbers cover only finished Monday-to-Sunday weeks, so two totals can
 never be subtracted to reveal one student's check-in. The proof is a script that signs in as each kind of user and
-tries every boundary: `npm run test:rls` (47 checks).
+tries every boundary: `npm run test:rls` (48 checks).
 
 ## The staff dashboard
 
@@ -182,20 +182,19 @@ sequenceDiagram
   St->>D: Regenerate the report
   D->>WR: Request with the staff sign-in
   WR->>DB: Which week is the latest closed one?
-  alt that week already has an AI-written report
-    WR-->>D: The stored report: a closed week never changes
-  else no report yet, or a template one
-    WR->>DB: Read the week and the six weeks its words look back on
+  alt that week is published with an AI-written report
+    WR-->>D: The stored report: a published week never changes
+  else not published yet
+    WR->>DB: Freeze: store the week's numbers and read its rows, in one transaction
     WR->>WR: Run the phone's rules for every participant, keep counts only
-    alt fewer than 10 participants
-      WR->>DB: Save "not reported"
-    else 10 or more
+    WR->>DB: Take the previous week from its published report
+    opt 10 or more participants
       WR->>DB: Reserve the call's worst-case cost in the AI ledger
       WR->>O: One call with the table of counts
       O-->>WR: At most 180 words and a confidence word
       WR->>WR: Check every number and word, or use the template
-      WR->>DB: Save the weekly report
     end
+    WR->>DB: Publish the report, only if this freeze is still the latest
   end
   D-->>St: Counts, prose and where the prose came from
 ```

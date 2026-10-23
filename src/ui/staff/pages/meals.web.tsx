@@ -43,7 +43,7 @@ export default function StaffMeals() {
       </View>
       {m?.suppressed ? (
         <Section title={ts('meals.tiers.title')}>
-          <Callout icon="lock">{ts('common.suppressed')}</Callout>
+          <Callout icon={m.pending ? 'info' : 'lock'}>{m.pending ? ts('common.pending', { from: m.from, to: m.to }) : ts('common.suppressed')}</Callout>
         </Section>
       ) : null}
 
