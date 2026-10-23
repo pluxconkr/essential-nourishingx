@@ -17,7 +17,10 @@
     "db:advisors": "node --env-file=.env.local scripts/env-run.mjs supabase db advisors --linked --type all",
     "functions:deploy": "node --env-file=.env.local scripts/env-run.mjs supabase functions deploy --use-api",
     "seed:synthetic": "node --env-file=.env.local --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/seed-synthetic.mjs",
-    "staff:create": "node --env-file=.env.local scripts/create-staff.mjs"
+    "staff:create": "node --env-file=.env.local scripts/create-staff.mjs",
+    "e2e:student": "node --env-file=.env.local scripts/e2e/student.mjs",
+    "e2e:staff": "node --env-file=.env.local --env-file=.env.staff.local scripts/e2e/staff.mjs",
+    "check:bundles": "node --env-file=.env.local scripts/check-bundles.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -56,6 +59,7 @@
     "@testing-library/react-native": "^14.0.1",
     "@types/node": "^26.6.4",
     "eslint": "^9.39.5",
+    "playwright-core": "1.64.0",
     "supabase": "2.120.0"
   }
 }
