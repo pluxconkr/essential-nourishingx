@@ -84,6 +84,8 @@ try {
   check('student cannot reserve AI budget', denied(r.error), r.error?.message);
   r = await a.rpc('freeze_week', { p_week_end: '2026-10-18' });
   check('student cannot freeze a week', denied(r.error), r.error?.message);
+  r = await a.rpc('weeks_showing_real', { p_week_ends: ['2026-10-18'] });
+  check('student cannot call weeks_showing_real', denied(r.error), r.error?.message);
   r = await a.from('meal_analyses').insert({ user_id: idA, day: today, meal: 'lunch', items: [], kcal: 1, kcal_low: 1, kcal_high: 1, protein_g: 0, carbs_g: 0, fat_g: 0, fiber_g: 0, difficulty: 'easy', tier: 'haiku', confidence: 'low' });
   check('student cannot fabricate meal analyses', denied(r.error), r.error?.message);
   r = await a.from('ai_usage').select('*');
@@ -133,6 +135,8 @@ try {
   check('staff cannot freeze a week (service role only)', denied(r.error), r.error?.message);
   r = await staff.rpc('publish_week', { p_week_end: ov?.to ?? '2026-10-18', p_made_at: new Date().toISOString(), p_report: {} });
   check('staff cannot publish a week (service role only)', denied(r.error), r.error?.message);
+  r = await staff.rpc('weeks_showing_real', { p_week_ends: [ov?.to ?? '2026-10-18'] });
+  check('staff cannot call weeks_showing_real (service role only)', denied(r.error), r.error?.message);
   const again = await staff.rpc('staff_overview');
   check('staff_overview gives the same published week again', !again.error && JSON.stringify(again.data) === JSON.stringify(ov), JSON.stringify(again.data ?? again.error?.message));
   for (const fn of ['staff_daily', 'staff_meals', 'staff_ai_spend']) {

@@ -39,7 +39,8 @@ its own label, so an older synthetic report is never mistaken for real students.
 Every number is for the **latest published week, Monday to Sunday**. A week can be published once it is *final*:
 students can send a check-in for the last 2 days only, so a week can be published three days after its Sunday. It is
 published by its weekly report (Regenerate, or the seed), and all of its numbers, its seven days and its report are
-taken together at that moment and never change after, even if a student later deletes their rows. A day counts only
+taken together at that moment and never change after, even if a student later deletes their rows (re-seeding replaces
+only weeks that showed no number of their own from real students). A day counts only
 if 10 or more participants checked in on it (*Days shown* says how many of the 7 did). There is no way to pick another
 window. This is deliberate: live, overlapping or separately taken totals could be subtracted from each other to reveal
 one student's check-in ([security-and-privacy.md](security-and-privacy.md#why-closed-weeks)).
@@ -56,7 +57,7 @@ setting.
 
 ```mermaid
 flowchart LR
-  R[("A closed week, plus the six weeks<br/>of check-ins and meal estimates<br/>its words look back on")] --> C["cohortReport():<br/>the phone's balanceFor() for<br/>every participant"]
+  R[("A closed week of check-ins and<br/>meal estimates, plus the 29 days<br/>before it that its words look back on")] --> C["cohortReport():<br/>the phone's balanceFor() for<br/>every participant"]
   C --> K{"10 or more<br/>participants?"}
   K -->|no| X["Saved as not reported"]
   K -->|yes| T["Counts only: words, rules, means,<br/>shares, this week and last"]
@@ -109,7 +110,9 @@ plan:
   listed in [sources.md](sources.md), so its numbers are traceable.
 
 `npm run seed:synthetic` replaces the synthetic rows, and the weekly reports built from them, with a fresh 30 days
-ending on the Sunday of the latest closed week, then writes that week's report and the three before it. Every
+ending on the Sunday of the latest closed week, then writes that week's report and the three before it. One of those
+four weeks that is already published is replaced only if none of its own numbers came from real students; otherwise
+the seed changes nothing and stops, so a week with real students' numbers is never replaced. Every
 synthetic row is stored with `cohort = 'synthetic'`; students cannot create such rows.
 `__tests__/synthetic.test.ts` checks that the same seed always gives the same cohort, the profile mix, the two sparse
 students, every word present on the last day, Watch plus Needs attention at most 20 %, and a visible exam week.

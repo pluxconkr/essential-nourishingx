@@ -155,7 +155,7 @@ labelled as an estimate. Details and every test run: [docs/ai-router.md](docs/ai
 "Delete everything" on the phone calls the `delete-me` function, which deletes the anonymous account; a database
 trigger then removes every row it owned. Staff numbers cover only finished Monday-to-Sunday weeks, so two totals can
 never be subtracted to reveal one student's check-in. The proof is a script that signs in as each kind of user and
-tries every boundary: `npm run test:rls` (48 checks).
+tries every boundary: `npm run test:rls` (50 checks).
 
 ## The staff dashboard
 

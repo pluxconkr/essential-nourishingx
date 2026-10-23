@@ -110,8 +110,15 @@ between still showed up as the difference (found by review, 2026-10-24). Now a w
 
 1. `freeze_week` stores the week's overview, its meal-photo numbers and its seven days, in one database transaction,
    and returns, from that same transaction, the rows the weekly report is worked out from. It holds a lock that keeps
-   anyone from writing to check-ins or meal estimates for those few milliseconds, so everything it reads is the same
-   moment (`supabase/migrations/20261023194359_freeze_week_one_view.sql`).
+   anyone from writing to check-ins or meal estimates while it reads (about 70 ms with 60 students and 0.7 s with 600,
+   measured locally), so everything it reads is the same moment
+   (`supabase/migrations/20261023194359_freeze_week_one_view.sql`). It never waits for that lock: if anyone is
+   writing, it takes neither table and asks again 50 ms later, for about a second, and then gives up. Staff then see
+   "The report could not be written. Nothing was changed." and press Regenerate again. Waiting would let it close a
+   loop with an account deletion and a meal estimate being saved for that same student, which Postgres breaks by
+   failing one of the three, perhaps the deletion. Holding neither table while it waits, the freeze is never part of
+   such a loop, and no upload or deletion waits behind it (found by review, 2026-10-24;
+   `supabase/migrations/20261023205442_freeze_week_yields.sql`).
 2. The weekly-report function works out the report from exactly those rows. The report's "previous week" is the
    previous week's published report, never worked out again.
 3. `publish_week` stores the report only if that freeze is still the latest one. Storing the report is what publishes
@@ -132,7 +139,10 @@ its groups is small.
 **Simulated students.** The synthetic cohort counts toward the 10 like anyone else, and anyone with the code can
 regenerate its answers (seed 2027). On a day shared with real students, subtracting the simulated answers would give
 the real ones back. So the two never share a day: real students can write only the open days, the seed writes only
-closed ones, and `npm run seed:synthetic` refuses to run over days that already hold real rows.
+closed ones, and `npm run seed:synthetic` refuses to run over days that already hold real rows. It also refuses to
+replace a published week, among the four it writes again, that showed staff any number of its own built from real
+students (`public.weeks_showing_real`; a report's "last week" figures are copied from the previous week's published
+report). A suppressed report is not enough to tell: that week's meal-photo page can still have shown numbers.
 
 **The one exception.** Inside a reported week (which already has 10 or more participants), the weekly report keeps
 the exact number of participants at each Balance word, which rule chose the word, and how many were at *Needs
@@ -200,7 +210,7 @@ The order matters, and a few details keep it honest:
 ## How it is tested
 
 `npm run test:rls` (`scripts/rls-test.mjs`) creates two anonymous students and a staff account on the real project
-and tries 48 things, for example:
+and tries 50 things, for example:
 
 - someone with no sign-in cannot read check-ins;
 - student B cannot read, change or delete student A's rows;

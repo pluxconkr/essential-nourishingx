@@ -5,7 +5,9 @@
  * real rows are never touched. Re-running replaces the synthetic rows, and the weekly reports built from them, with a
  * fresh 30 days ending on the Sunday of the latest closed week (public.report_week()), then writes that week's report
  * and the three before it through the weekly-report function, oldest first, which publishes each week: the earlier
- * weeks from the template, the latest with its one prose call.
+ * weeks from the template, the latest with its one prose call. A week of those four that is already published is
+ * replaced only if none of its own numbers shown to staff came from real students (public.weeks_showing_real);
+ * otherwise the seed refuses to run, because a week that showed staff numbers from real students never changes.
  * Synthetic and real rows never share a day. Anyone with this repo can regenerate the synthetic answers (seed 2027),
  * so on a shared day subtracting them from the staff totals would give the real students' answers back (code review
  * 2026-10-24). Real students can write only open days (the upload window) and the seed writes only closed ones, so the
@@ -36,6 +38,9 @@ async function must(label, promise) {
 const clearOnly = process.argv.includes('--clear');
 const weekEnd = (await must('read the latest closed week', admin.rpc('report_week'))).to;
 const from = addDays(weekEnd, -29);
+// The four weeks the seed publishes, oldest first; only the latest gets model prose.
+const weeks = [3, 2, 1, 0].map((back) => ({ end: addDays(weekEnd, -7 * back), prose: back === 0 }));
+const weekStarts = weeks.map((w) => addDays(w.end, -6));
 if (!clearOnly) {
   for (const table of ['checkins', 'meal_analyses']) {
     const { count, error } = await admin.from(table).select('user_id', { count: 'exact', head: true }).eq('cohort', 'real').gte('day', from).lte('day', weekEnd);
@@ -44,12 +49,14 @@ if (!clearOnly) {
       process.exit(1);
     }
   }
-}
-
-if (!clearOnly) {
-  // The four weeks about to be published hold no real rows (checked above), so any report on them, even a suppressed
-  // one written before seeding (it has no syntheticShare), is unpublished and written again below.
-  const weekStarts = [27, 20, 13, 6].map((d) => addDays(weekEnd, -d));
+  // A week already published there is unpublished and written again below only if none of its own numbers shown to
+  // staff came from real students. One with such numbers stays published, even after they delete their rows, so the
+  // seed refuses: such a week never changes.
+  const real = await must('check the seeded weeks', admin.rpc('weeks_showing_real', { p_week_ends: weeks.map((w) => w.end) }));
+  if (real.length) {
+    console.error(`Staff were shown numbers from real students for the week ending ${real.join(', ')}, and such a week never changes. Nothing was changed.`);
+    process.exit(1);
+  }
   await must('unpublish the seeded weeks', admin.from('weekly_reports').delete().in('week_start', weekStarts));
 }
 await must('remove synthetic check-ins', admin.from('checkins').delete().eq('cohort', 'synthetic'));
@@ -98,8 +105,7 @@ for (const part of chunks(meals)) {
 }
 console.log(`Seeded ${checkins.length} synthetic check-ins and ${meals.length} synthetic meal estimates for the 30 days ending ${weekEnd}, the Sunday of the latest closed week.`);
 
-for (const [weeksBack, prose] of [[3, false], [2, false], [1, false], [0, true]]) {
-  const end = addDays(weekEnd, -7 * weeksBack);
+for (const { end, prose } of weeks) {
   const res = await fetch(`${SUPABASE_URL}/functions/v1/weekly-report`, {
     method: 'POST',
     headers: { apikey: SUPABASE_SECRET_KEY, 'Content-Type': 'application/json' },
@@ -108,6 +114,12 @@ for (const [weeksBack, prose] of [[3, false], [2, false], [1, false], [0, true]]
   const body = await res.json().catch(() => ({}));
   if (!res.ok || !body.report) {
     console.error(`weekly report for the week ending ${end}: HTTP ${res.status} ${JSON.stringify(body)}`);
+    process.exit(1);
+  }
+  // The seed unpublished this week, so its report must be the one this call wrote. A cached one was published by
+  // another call (a staff Regenerate) while seeding, perhaps before every synthetic row was in.
+  if (body.cached) {
+    console.error(`The week ending ${end} was published by another call while seeding. Run npm run seed:synthetic again.`);
     process.exit(1);
   }
   const r = body.report;

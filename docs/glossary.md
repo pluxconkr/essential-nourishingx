@@ -20,7 +20,8 @@ in it.
 its days (see *upload window*). Only closed weeks can be published.
 
 **Published week** — a closed week whose weekly report has been written. All of its staff numbers, its seven days and
-its report are taken at that one moment and never change after, so two of them can never be subtracted to reveal one
+its report are taken at that one moment and never change after (re-seeding replaces only weeks that showed no number
+of their own from real students), so two of them can never be subtracted to reveal one
 student's check-in. Staff see nothing about a week before it is published.
 
 **Cohort** — a group of students counted together. Rows are marked `real` or `synthetic` (simulated).
