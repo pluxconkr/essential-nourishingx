@@ -126,9 +126,10 @@ export const actions = {
         do {
           syncAgain = false;
           if (!(await connect())) return;
-          // The server takes check-ins from the last UPLOAD_DAYS days only; older ones stay on the phone.
+          // The server takes check-ins from the last UPLOAD_DAYS days only; older ones stay on the phone. A date that
+          // did not come out as YYYY-MM-DD drops nothing, because every real date would compare below it.
           const oldest = addDays(schoolDate(), -UPLOAD_DAYS);
-          syncQueueRepo.remove(syncQueueRepo.get().filter((d) => d < oldest));
+          if (/^\d{4}-\d{2}-\d{2}$/.test(oldest)) syncQueueRepo.remove(syncQueueRepo.get().filter((d) => d < oldest));
           const queued = new Set(syncQueueRepo.get());
           if (queued.size && state.prefs.demo === 'live') {
             const sent = state.checkins.filter((c) => queued.has(c.date));
@@ -153,7 +154,8 @@ export const actions = {
   /** One meal photo, already resized on the phone. The result is kept as the student's own row. */
   async analyzeMeal(image: string, meal: Meal, day: string = dateKey()): Promise<AnalyzeResult> {
     const result = await analyzeOnServer({ image, meal, day });
-    if (result.status === 'ok') setState({ meals: mealRepo.add(result.record) });
+    // An answer that arrives during or after "Delete everything" is not stored: the account and its rows are gone.
+    if (result.status === 'ok' && !deleting && state.prefs.consentedAt !== null) setState({ meals: mealRepo.add(result.record) });
     return result;
   },
 

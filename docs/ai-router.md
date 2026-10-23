@@ -108,7 +108,7 @@ closed week. See [staff-dashboard.md](staff-dashboard.md#the-weekly-report).
 
 All Claude calls live in one file, `supabase/functions/_shared/claude.ts` (triage, deep analysis, weekly prose), and
 every one reserves its worst case and then writes its real cost in the ledger (`_shared/ledger.ts`). Total spent so
-far on everything — router tests, end-to-end tests and weekly reports — USD 6.66 of USD 20 (2026-10-24).
+far on everything — router tests, end-to-end tests and weekly reports — USD 6.94 of USD 20 (2026-10-24).
 
 ## Run it yourself
 

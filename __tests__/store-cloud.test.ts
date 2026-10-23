@@ -18,7 +18,7 @@ jest.mock('@/services/cloud', () => ({
 import { kv } from '@/data/db';
 import { KEYS } from '@/data/registry';
 import type { MealRecord } from '@/domain/types';
-import { analyzeMeal, deleteCloudAccount, deleteMeal, fetchMeals, fetchMenus, uploadCheckins } from '@/services/cloud';
+import { analyzeMeal, deleteCloudAccount, deleteMeal, fetchMeals, fetchMenus, uploadCheckins, type AnalyzeResult } from '@/services/cloud';
 import { menuForToday } from '@/services/menu';
 import { actions, getState, hydrate } from '@/store/appStore';
 
@@ -125,6 +125,17 @@ test('delete everything deletes nothing when the server cannot be reached', asyn
   expect(await actions.deleteEverything()).toBe('offline');
   expect(getState().checkins).toHaveLength(1);
   expect(await actions.deleteEverything()).toBe('done');
+  expect(kv.keys()).toEqual([KEYS.schema]);
+});
+
+test('a photo answer that arrives after Delete everything is not stored on the phone', async () => {
+  let finish: (r: AnalyzeResult) => void = () => {};
+  (analyzeMeal as jest.Mock).mockImplementationOnce(() => new Promise<AnalyzeResult>((resolve) => (finish = resolve)));
+  const analysing = actions.analyzeMeal('b64', 'lunch', today);
+  expect(await actions.deleteEverything()).toBe('done');
+  finish({ status: 'ok', record });
+  expect((await analysing).status).toBe('ok');
+  expect(getState().meals).toEqual([]);
   expect(kv.keys()).toEqual([KEYS.schema]);
 });
 

@@ -6,9 +6,13 @@ export function dateKey(d: Date = new Date()): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-/** The school's calendar date (New Hampshire, US Eastern): the day every server rule and staff total uses. */
+/** The school's calendar date (New Hampshire, US Eastern): the day every server rule and staff total uses. Read from
+ * en-US's MM/DD/YYYY, the most settled numeric format: en-CA's YYYY-MM-DD has changed between ICU versions, and Hermes
+ * on the phone has DateTimeFormat.format but no formatToParts. '' if the format is ever something else. */
 export function schoolDate(now: Date = new Date()): string {
-  return now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+  const us = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(us);
+  return m ? `${m[3]}-${m[1]}-${m[2]}` : '';
 }
 
 /** Check-ins older than this many days are no longer accepted by the server (private.upload_days() in

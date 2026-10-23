@@ -105,8 +105,9 @@ export interface MealsSummary {
   low_confidence_share?: number;
   by_meal?: { meal: string; analyses: number | null; students: number | null; suppressed: boolean; avg_kcal: number | null; avg_protein_g: number | null; avg_carbs_g: number | null; avg_fat_g: number | null; avg_fiber_g: number | null }[];
   groups?: { group: string; share: number }[];
-  tiers?: Record<string, number>;
-  difficulty?: Record<string, number>;
+  /** null: a model (or difficulty) group has fewer than 10 participants, so the whole table is withheld. */
+  tiers?: Record<string, number> | null;
+  difficulty?: Record<string, number> | null;
 }
 
 export interface AiSpend {

@@ -27,6 +27,7 @@ export const staffStrings = {
 
   // ---- common ----
   'common.suppressed': 'Fewer than 10 participants, so nothing is shown',
+  'common.suppressed.table': 'One of these groups has fewer than 10 participants, so the table is not shown: its size could be worked out from the total',
   'common.unavailable': 'Could not load this. Check the connection and refresh.',
   'common.window': '{from} to {to}',
   'report.synthetic': 'Synthetic data · {share} of this report’s participants are simulated students',

@@ -50,10 +50,10 @@ export default function StaffMeals() {
       {m && !m.suppressed ? (
         <>
           <Section title={ts('meals.tiers.title')} foot={ts('meals.tiers.foot')}>
-            <Shares counts={m.tiers ?? {}} label={modelName} />
+            {m.tiers ? <Shares counts={m.tiers} label={modelName} /> : <Callout icon="lock">{ts('common.suppressed.table')}</Callout>}
           </Section>
           <Section title={ts('meals.difficulty.title')}>
-            <Shares counts={m.difficulty ?? {}} label={(k) => ts(`meals.difficulty.${k}` as StaffKey)} />
+            {m.difficulty ? <Shares counts={m.difficulty} label={(k) => ts(`meals.difficulty.${k}` as StaffKey)} /> : <Callout icon="lock">{ts('common.suppressed.table')}</Callout>}
           </Section>
         </>
       ) : null}

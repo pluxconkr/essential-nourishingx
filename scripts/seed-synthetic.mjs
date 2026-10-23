@@ -6,6 +6,10 @@
  * fresh 30 days ending on the Sunday of the latest closed week (public.report_week(), the week staff see), then writes
  * that week's report and the three before it through the weekly-report function: the earlier weeks from the
  * template, the latest with its one prose call.
+ * Synthetic and real rows never share a day. Anyone with this repo can regenerate the synthetic answers (seed 2027),
+ * so on a shared day subtracting them from the staff totals would give the real students' answers back (code review
+ * 2026-10-24). Real students can write only open days (the upload window) and the seed writes only closed ones, so the
+ * one way to mix them is seeding over days that already hold real rows: the seed refuses to.
  * Run: npm run seed:synthetic            (or add --clear to only remove the synthetic rows and reports)
  */
 import { createClient } from '@supabase/supabase-js';
@@ -29,16 +33,28 @@ async function must(label, promise) {
   return data;
 }
 
+const clearOnly = process.argv.includes('--clear');
+const weekEnd = (await must('read the latest closed week', admin.rpc('report_week'))).to;
+const from = addDays(weekEnd, -29);
+if (!clearOnly) {
+  for (const table of ['checkins', 'meal_analyses']) {
+    const { count, error } = await admin.from(table).select('user_id', { count: 'exact', head: true }).eq('cohort', 'real').gte('day', from).lte('day', weekEnd);
+    if (error || count) {
+      console.error(error ? `count real ${table}: ${error.message}` : `${count} real ${table} rows fall between ${from} and ${weekEnd}; synthetic rows must not share a day with real ones. Nothing was changed.`);
+      process.exit(1);
+    }
+  }
+}
+
 await must('remove synthetic check-ins', admin.from('checkins').delete().eq('cohort', 'synthetic'));
 await must('remove synthetic meal estimates', admin.from('meal_analyses').delete().eq('cohort', 'synthetic'));
 // A report counts synthetic participants in syntheticShare; one built only from real rows has 0 and stays.
 await must('remove synthetic weekly reports', admin.from('weekly_reports').delete().gt('aggregates->>syntheticShare', '0'));
-if (process.argv.includes('--clear')) {
+if (clearOnly) {
   console.log('Removed the synthetic cohort and its weekly reports.');
   process.exit(0);
 }
 
-const weekEnd = (await must('read the latest closed week', admin.rpc('report_week'))).to;
 const { checkins, meals } = generate(weekEnd);
 const chunks = (rows, n = 500) => Array.from({ length: Math.ceil(rows.length / n) }, (_, i) => rows.slice(i * n, i * n + n));
 for (const part of chunks(checkins)) {

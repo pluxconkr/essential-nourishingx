@@ -104,6 +104,17 @@ away. So every staff number now follows three rules:
 The daily chart ends on the last final day, and the weekly report (`weekly-report`) uses the same closed weeks, so a
 report never changes once written and two reports never overlap.
 
+The meal-photo numbers follow one more rule (`supabase/migrations/20261023185644_staff_meals_shared_rows.sql`):
+**every number covers the same photos**, those of meal slots with 10 or more participants of their own. Otherwise the
+total minus the slots that are shown would give the hidden slot's count back. The tables of which model answered and
+how hard the photos were split those same photos a second and a third way, so each table appears only when none of
+its groups is small.
+
+**Simulated students.** The synthetic cohort counts toward the 10 like anyone else, and anyone with the code can
+regenerate its answers (seed 2027). On a day shared with real students, subtracting the simulated answers would give
+the real ones back. So the two never share a day: real students can write only the open days, the seed writes only
+closed ones, and `npm run seed:synthetic` refuses to run over days that already hold real rows.
+
 **The one exception.** Inside a reported week (which already has 10 or more participants), the weekly report keeps
 the exact number of participants at each Balance word, which rule chose the word, and how many were at *Needs
 attention* 3 or more days in a row — even when that number is 1. The Health Center needs to know that someone may
@@ -192,11 +203,11 @@ The test deletes the accounts it made when it finishes.
   project's attempt to turn it on returned HTTP 402. Staff passwords are random 24-character strings made by
   `scripts/create-staff.mjs`.
 - **No automatic end-of-term purge yet.** Rows stay until the student deletes them.
-- **A deletion can still change a closed week.** When a student deletes a meal estimate or the whole account, those
-  rows leave the live staff totals for weeks that were already closed, so a staff member comparing the same week
-  before and after could learn something about that one student. Stored weekly reports do not change (an AI report of
-  a closed week is final), but the overview's live totals do. Freezing each closed week's totals in a table when the
-  week closes would remove this; it is the next privacy step, and students keep the right to delete.
+- **A deletion can still change a closed week.** When a student deletes a meal estimate, a check-in or the whole
+  account, those rows leave the live staff totals for weeks that were already closed, so a staff member comparing
+  the same week before and after could learn something about that one student. Stored weekly reports do not change
+  (an AI report of a closed week is final), but the overview's live totals do. Freezing each closed week's totals in
+  a table when the week closes would remove this; it is the next privacy step, and students keep the right to delete.
 - **Staff sign-in is a password only.** There is no second factor (MFA) yet, and the dashboard is served from the same
   web address as the student web app without a Content Security Policy. To limit the damage, the staff session is
   kept in the browser tab's `sessionStorage` and ends when the tab closes. Serving `/staff` from its own address with
