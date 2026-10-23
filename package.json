@@ -11,10 +11,14 @@
     "lint": "expo lint",
     "test": "jest",
     "test:watch": "jest --watchAll",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:rls": "node --env-file=.env.local scripts/rls-test.mjs",
+    "db:push": "node --env-file=.env.local scripts/env-run.mjs supabase db push --linked",
+    "db:advisors": "node --env-file=.env.local scripts/env-run.mjs supabase db advisors --linked --type all"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
+    "@supabase/supabase-js": "2.118.0",
     "@types/jest": "29.5.14",
     "@types/react": "~19.2.4",
     "eslint-config-expo": "~57.0.2",
