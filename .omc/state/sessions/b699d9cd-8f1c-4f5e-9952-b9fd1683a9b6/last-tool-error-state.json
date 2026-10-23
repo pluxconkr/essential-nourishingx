@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"cd /Users/justiceserv/Codes/essential-congressional-apps/docs; for r in 620,672 710,720 730,812 812,870 900,920 955,1240; do sed -n \\\"${r}p\\\" 5_NewHampshire.HTM | awk -v s=${r%,*} '{print ...",
-  "error": "Exit code 1\n620:       &#127869; Menu performance 24\n621:       &#128269; Pattern candidates 6\n622:       &#127917; What-if simulator\n623:       Health &amp; Wellness\n624:       &#129505; Aggregate states\n625:       &#128221; Escalation protocol\n626:       How it works\n627:       &#9878; Rule engine ~40\n628:       &#128274; Data &amp; consent\n629:       &#9881; Menu table &amp; reminder\n630:       &#9986; Scope guard\n633:       Synthetic data60 simulated students &times; 30 days. No real student...",
-  "timestamp": "2026-10-05T08:29:42.193Z",
-  "retry_count": 1
-}

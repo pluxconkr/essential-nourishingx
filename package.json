@@ -45,6 +45,7 @@
   "devDependencies": {
     "@testing-library/react-native": "^14.0.1",
     "@types/node": "^26.6.4",
-    "eslint": "^9.39.5"
+    "eslint": "^9.39.5",
+    "supabase": "2.122.0"
   }
 }

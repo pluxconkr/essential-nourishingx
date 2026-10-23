@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "createdAt": "2026-10-23T14:25:46.950Z",
+  "updatedAt": "2026-10-23T14:25:52.188Z",
+  "briefPath": ".omc/ultragoal/brief.md",
+  "goalsPath": ".omc/ultragoal/goals.json",
+  "ledgerPath": ".omc/ultragoal/ledger.jsonl",
+  "claudeGoalMode": "aggregate",
+  "goals": [
+    {
+      "id": "G001-foundation",
+      "title": "Foundation",
+      "objective": "Rewrite AGENTS.md hard rules for the new direction, load claude-api/supabase/expo skills, link Supabase CLI, set Edge Function secrets, enable anonymous sign-ins, write the architecture decision record in docs/",
+      "status": "in_progress",
+      "attempt": 1,
+      "createdAt": "2026-10-23T14:25:46.950Z",
+      "updatedAt": "2026-10-23T14:25:52.188Z",
+      "startedAt": "2026-10-23T14:25:52.188Z"
+    },
+    {
+      "id": "G002-schema-and-rls",
+      "title": "Schema and RLS",
+      "objective": "Create migrations for students, check-ins, meal analyses, menu, staff roles, audit/cost log and n>=10 aggregate views; private transient photo bucket; RLS policies proven by automated tests as anon, student, other student and staff",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-10-23T14:25:46.950Z",
+      "updatedAt": "2026-10-23T14:25:46.950Z"
+    },
+    {
+      "id": "G003-llm-router",
+      "title": "LLM router",
+      "objective": "Build the Edge Function: Haiku triage (foods + difficulty), route to Haiku/Opus/Fable deep analysis, structured validated output with calorie/macro estimates and confidence, photo deletion, per-call cost logging and a hard USD 20 budget guard",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-10-23T14:25:46.950Z",
+      "updatedAt": "2026-10-23T14:25:46.950Z"
+    },
+    {
+      "id": "G004-prompt-engineering",
+      "title": "Prompt engineering",
+      "objective": "Collect diverse licensed food photos, build an eval harness with expected labels, iterate prompts and routing thresholds, record accuracy/cost/latency per tier in docs",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-10-23T14:25:46.950Z",
+      "updatedAt": "2026-10-23T14:25:46.950Z"
+    },
+    {
+      "id": "G005-rules-integration",
+      "title": "Rules integration",
+      "objective": "Add meal-derived inputs, clauses and evidence to the domain with researched thresholds and cited sources, keep evaluateRules single, update tests and docs/thresholds.md",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-10-23T14:25:46.950Z",
+      "updatedAt": "2026-10-23T14:25:46.950Z"
+    },
+    {
+      "id": "G006-student-app",
+      "title": "Student app",
+      "objective": "Wire Supabase anonymous auth and sync, meal photo capture and results in the existing UI style, Balance evidence from meals, i18n and forbidden-word updates, fix the verified high-severity bugs",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-10-23T14:25:46.950Z",
+      "updatedAt": "2026-10-23T14:25:46.950Z"
+    },
+    {
+      "id": "G007-staff-dashboard",
+      "title": "Staff dashboard",
+      "objective": "Build every /staff view (sign-in, overview, menu, wellness, meals, rules tester, data, ops, scope) on RLS-protected aggregates plus the weekly prose batch, matching the existing UI",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-10-23T14:25:46.950Z",
+      "updatedAt": "2026-10-23T14:25:46.950Z"
+    },
+    {
+      "id": "G008-verification",
+      "title": "Verification",
+      "objective": "Unit, RLS and Edge Function tests, typecheck, lint, platform exports, browser E2E for student and staff, real photo runs; all green with recorded output",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-10-23T14:25:46.950Z",
+      "updatedAt": "2026-10-23T14:25:46.950Z"
+    },
+    {
+      "id": "G009-docs",
+      "title": "Docs",
+      "objective": "English README.md with diagrams and docs/ pages that students can follow (how it works, AI router, data and privacy, safety, sources)",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-10-23T14:25:46.950Z",
+      "updatedAt": "2026-10-23T14:25:46.950Z"
+    },
+    {
+      "id": "G010-ship",
+      "title": "Ship",
+      "objective": "Run ai-slop-cleaner, rerun verification, run code review, fix findings, commit and push to main",
+      "status": "pending",
+      "attempt": 0,
+      "createdAt": "2026-10-23T14:25:46.950Z",
+      "updatedAt": "2026-10-23T14:25:46.950Z"
+    }
+  ],
+  "claudeObjective": "Complete all ultragoal stories in .omc/ultragoal/goals.json: G001-foundation Foundation; G002-schema-and-rls Schema and RLS; G003-llm-router LLM router; G004-prompt-engineering Prompt engineering; G005-rules-integration Rules integration; G006-student-app Student app; G007-staff-dashboard Staff dashboard; G008-verification Verification; G009-docs Docs; G010-ship Ship",
+  "activeGoalId": "G001-foundation"
+}

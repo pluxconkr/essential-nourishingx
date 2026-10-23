@@ -3,6 +3,10 @@ node_modules/
 
 # planning artefacts
 .claude/
+# OMC plugin runtime state, rewritten every session (plans/ and ultragoal/ stay tracked)
+.omc/state/
+.omc/sessions/
+.omc/project-memory.json
 
 # Expo
 .expo/
