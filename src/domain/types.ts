@@ -10,8 +10,18 @@ export type Skipped = 'none' | 'breakfast' | 'lunch' | 'dinner';
 /** All a student ever sees: three words plus the honest fourth. */
 export type StateWord = 'stable' | 'watch' | 'attention' | 'nodata';
 
-/** Rule clauses, in evaluation order (spec §7). */
-export type Clause = 'A' | 'B1' | 'B2' | 'B3' | 'C1' | 'C2' | 'C3' | 'C4' | 'D';
+/** Rule clauses, in evaluation order (spec §7; C5 and C6 read meal photos, docs/thresholds.md). */
+export type Clause = 'A' | 'B1' | 'B2' | 'B3' | 'C1' | 'C2' | 'C3' | 'C4' | 'C5' | 'C6' | 'D';
+
+export type Meal = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+
+/** What the rules read from one analysed meal photo. Photos are optional, so a missing photo means nothing. */
+export interface MealLog {
+  date: string;
+  meal: Meal;
+  protein_g: number;
+  carbs_g: number;
+}
 
 export interface Checkin {
   /** Local calendar day, YYYY-MM-DD. One record per day; a second save overwrites. */
@@ -43,14 +53,24 @@ export interface Derived {
   energyMean: number;
   focusMean: number;
   fullMean: number;
+  /** Photographed main meals (breakfast, lunch, dinner) in the window. */
+  mealsLogged: number;
+  /** Photographed main meals estimated below TH.meal_lowProtein_g of protein. */
+  lowProteinMeals: number;
+  /** Heavy-training days with at least TH.c6_minMealsPerDay photographed main meals. */
+  heavyDaysLogged: number;
+  /** Of those, days whose photographed meals together stayed below TH.c6_lowCarb_g of carbohydrate. */
+  heavyDaysLowCarb: number;
 }
 
-export type EvidenceCategory = 'skipped' | 'training' | 'fullness' | 'energy' | 'focus';
+export type EvidenceCategory = 'skipped' | 'training' | 'fullness' | 'energy' | 'focus' | 'protein' | 'carbs';
 
 export interface Evidence {
   category: EvidenceCategory;
-  /** Integer day count where the category has one. */
+  /** Integer day (or meal) count where the category has one. */
   count: number;
+  /** For meal-photo categories: how many photographed meals or days the count is out of. */
+  of?: number;
   direction?: 'down' | 'steady' | 'up';
 }
 

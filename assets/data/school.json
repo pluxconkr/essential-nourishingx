@@ -47,6 +47,16 @@
       "Take a piece of fruit from the exit line on the way out",
       "Pick a protein + carb option at lunch"
     ],
+    "C5": [
+      "Add a protein to lunch and dinner: grilled chicken, tofu, eggs or chickpeas from the salad bar",
+      "Have the scrambled eggs or the yogurt and granola at breakfast",
+      "Pick a protein + carb option at dinner"
+    ],
+    "C6": [
+      "On heavy training days, add rice, pasta or bread to lunch and dinner",
+      "Take a banana or the grab-and-go bag before practice",
+      "Add a carb + protein snack after practice"
+    ],
     "D": ["Keep doing what you did this week"]
   }
 }

@@ -5,8 +5,8 @@ import type { Clause, Derived, School } from '@/domain/types';
 import { en } from '@/i18n/en';
 
 const school = schoolJson as unknown as School;
-const CLAUSES: Clause[] = ['A', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3', 'C4', 'D'];
-const derived: Derived = { n: 7, skipped: 3, heavyDays: 4, lowEnergyDays: 3, lowFocusDays: 4, fullDelta: -0.7, energyMean: 2.4, focusMean: 2.1, fullMean: 2.9 };
+const CLAUSES: Clause[] = ['A', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'D'];
+const derived: Derived = { n: 7, skipped: 3, heavyDays: 4, lowEnergyDays: 3, lowFocusDays: 4, fullDelta: -0.7, energyMean: 2.4, focusMean: 2.1, fullMean: 2.9, mealsLogged: 4, lowProteinMeals: 3, heavyDaysLogged: 3, heavyDaysLowCarb: 2 };
 
 describe('evidence is chosen by the firing clause', () => {
   test('every input a clause tests appears in its evidence', () => {
@@ -28,6 +28,13 @@ describe('evidence is chosen by the firing clause', () => {
       expect(cats.includes('energy') && cats.includes('focus')).toBe(false);
       expect(new Set(cats).size).toBe(cats.length);
     }
+  });
+  test('meal clauses lead with their meal line and say what the count is out of', () => {
+    expect(buildEvidence(derived, 'C5')[0]).toEqual({ category: 'protein', count: 3, of: 4 });
+    expect(buildEvidence(derived, 'C6').slice(0, 2)).toEqual([
+      { category: 'carbs', count: 2, of: 3 },
+      { category: 'training', count: 4 },
+    ]);
   });
   test('evidence carries integer counts and a direction word only', () => {
     for (const e of buildEvidence(derived, 'C1')) {

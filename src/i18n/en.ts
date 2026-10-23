@@ -130,6 +130,8 @@ export const en = {
   'clause.C2': 'The rule that matched looks at low-energy days and skipped meals.',
   'clause.C3': 'The rule that matched looks at falling fullness and heavy training days.',
   'clause.C4': 'The rule that matched looks at low-focus days and skipped meals.',
+  'clause.C5': 'The rule that matched looks at protein in the meals you photographed.',
+  'clause.C6': 'The rule that matched looks at carbohydrate in the meals you photographed on heavy training days.',
   'clause.D': 'No warning rule matched this week.',
 
   // ---- evidence templates (integers only; direction in words) ----
@@ -153,6 +155,14 @@ export const en = {
   'ev.focus.none': 'Focus was not low on any day',
   'ev.focus.n.one': 'Focus was low on {n} day',
   'ev.focus.n.other': 'Focus was low on {n} days',
+  'ev.protein.title': 'Protein',
+  'ev.protein.none': 'Your photographed meals all had some protein',
+  'ev.protein.n.one': 'Low in protein: {n} of {of} photographed meals',
+  'ev.protein.n.other': 'Low in protein: {n} of {of} photographed meals',
+  'ev.carbs.title': 'Fuel on heavy days',
+  'ev.carbs.none': 'Photographed meals on heavy training days had carbohydrate',
+  'ev.carbs.n.one': 'Little carbohydrate on {n} of {of} heavy training days you photographed',
+  'ev.carbs.n.other': 'Little carbohydrate on {n} of {of} heavy training days you photographed',
 
   // ---- attention card ----
   'attention.title': 'Worth talking to someone',
@@ -234,7 +244,7 @@ export const en = {
   // ---- how this works ----
   'how.title': 'How this works',
   'how.rules.title': 'Rules, not a model',
-  'how.rules.body': 'Your word comes from a fixed set of about forty lines of rules that look at the last 7 days: meals skipped, heavy training days, low-energy and low-focus days, and the direction of your fullness. Nothing is learned or predicted, so the same answers always give the same word.',
+  'how.rules.body': 'Your word comes from a fixed set of rules that look at the last 7 days: meals skipped, heavy training days, low-energy and low-focus days, the direction of your fullness and, if you add meal photos, protein and carbohydrate in those meals. A meal without a photo never counts against you. Nothing is learned or predicted, so the same answers always give the same word.',
   'how.words.title': 'Three words, plus one honest one',
   'how.words.body': 'Stable, Watch, Needs attention. When there are fewer than four check-ins in a week the app says Not enough data instead of guessing.',
   'how.evidence.title': 'Four reasons, always',

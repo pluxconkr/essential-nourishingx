@@ -1,10 +1,11 @@
 /**
- * THE rule engine (spec §7). ~40 lines of fixed thresholds; the only thing that decides a state word.
- * Shared by the phone, the weekly batch and the dashboard's rule tester — a second implementation is a build failure.
+ * THE rule engine (spec §7). Fixed thresholds; the only thing that decides a state word.
+ * Shared by the phone, the weekly-report Edge Function and the staff rule tester — a second implementation is a build failure.
  * Thresholds are reasoned, not clinically validated; provenance in docs/thresholds.md.
  */
-import { addDays } from './time';
-import type { Checkin, Clause, Derived, StateWord } from './types';
+import { deriveMeals } from './meals.ts';
+import { addDays } from './time.ts';
+import type { Checkin, Clause, Derived, MealLog, StateWord } from './types.ts';
 
 export const TH = {
   minCheckins: 4,
@@ -15,6 +16,9 @@ export const TH = {
   c2_lowEnergy: 3, c2_skipped: 2,
   c3_fullDelta: -1.0, c3_heavy: 2,
   c4_lowFocus: 4, c4_skipped: 2,
+  // Meal photos: well under the teen DRI (protein 46–52 g/day, carbohydrate 130 g/day) and ISSN 2017 guidance; docs/thresholds.md.
+  meal_lowProtein_g: 10, c5_minMeals: 4, c5_lowShare: 0.75,
+  c6_minMealsPerDay: 2, c6_lowCarb_g: 60, c6_heavyDaysLowCarb: 2,
 } as const;
 
 /** Seven slots, oldest first, ending on `endDate`; null where there is no check-in. */
@@ -28,8 +32,9 @@ export function windowFor(checkins: readonly Checkin[], endDate: string): (Check
 const mean = (a: number[]) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
 const round2 = (x: number) => Math.round(x * 100) / 100;
 
-/** Derived inputs over the trailing 7 days. fullDelta compares the last 3 present check-ins with up to 4 earlier present ones (prototype semantics). */
-export function derive(window: readonly (Checkin | null)[]): Derived {
+/** Derived inputs over the trailing 7 days. fullDelta compares the last 3 present check-ins with up to 4 earlier present ones (prototype semantics).
+ * `meals` are the photographed meals inside the same window (mealsIn). */
+export function derive(window: readonly (Checkin | null)[], meals: readonly MealLog[] = []): Derived {
   const e = window.filter((d): d is Checkin => d !== null);
   const fulls = e.map((d) => d.fullness);
   const last3 = fulls.slice(-3);
@@ -44,10 +49,11 @@ export function derive(window: readonly (Checkin | null)[]): Derived {
     energyMean: round2(mean(e.map((d) => d.energy))),
     focusMean: round2(mean(e.map((d) => d.focus))),
     fullMean: round2(mean(fulls)),
+    ...deriveMeals(e, meals, { lowProtein_g: TH.meal_lowProtein_g, minMealsPerDay: TH.c6_minMealsPerDay, lowCarb_g: TH.c6_lowCarb_g }),
   };
 }
 
-/** First matching clause wins — order is part of the spec. */
+/** First matching clause wins — order is part of the spec. Meal-photo clauses (C5, C6) come last and can only say watch. */
 export function evaluateRules(i: Derived): { state: StateWord; clause: Clause } {
   if (i.n < TH.minCheckins) return { state: 'nodata', clause: 'A' };
   if (i.skipped >= TH.b1_skipped && i.heavyDays >= TH.b1_heavy) return { state: 'attention', clause: 'B1' };
@@ -57,6 +63,8 @@ export function evaluateRules(i: Derived): { state: StateWord; clause: Clause } 
   if (i.lowEnergyDays >= TH.c2_lowEnergy && i.skipped >= TH.c2_skipped) return { state: 'watch', clause: 'C2' };
   if (i.fullDelta <= TH.c3_fullDelta && i.heavyDays >= TH.c3_heavy) return { state: 'watch', clause: 'C3' };
   if (i.lowFocusDays >= TH.c4_lowFocus && i.skipped >= TH.c4_skipped) return { state: 'watch', clause: 'C4' };
+  if (i.mealsLogged >= TH.c5_minMeals && i.lowProteinMeals >= TH.c5_lowShare * i.mealsLogged) return { state: 'watch', clause: 'C5' };
+  if (i.heavyDaysLowCarb >= TH.c6_heavyDaysLowCarb) return { state: 'watch', clause: 'C6' };
   return { state: 'stable', clause: 'D' };
 }
 

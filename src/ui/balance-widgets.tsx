@@ -83,7 +83,7 @@ export function MenuCard({ meal, hours, items, footnote }: { meal: string; hours
   );
 }
 
-const EVIDENCE_ICON: Record<Evidence['category'], IconName> = { skipped: 'meals', training: 'training', fullness: 'fullness', energy: 'energy', focus: 'focus' };
+const EVIDENCE_ICON: Record<Evidence['category'], IconName> = { skipped: 'meals', training: 'training', fullness: 'fullness', energy: 'energy', focus: 'focus', protein: 'protein', carbs: 'carbs' };
 
 export function evidenceText(e: Evidence): { title: string; line: string } {
   switch (e.category) {
@@ -97,6 +97,10 @@ export function evidenceText(e: Evidence): { title: string; line: string } {
       return { title: t('ev.energy.title'), line: e.count === 0 ? t('ev.energy.none') : tn(e.count, 'ev.energy.n') };
     case 'focus':
       return { title: t('ev.focus.title'), line: e.count === 0 ? t('ev.focus.none') : tn(e.count, 'ev.focus.n') };
+    case 'protein':
+      return { title: t('ev.protein.title'), line: e.count === 0 ? t('ev.protein.none') : tn(e.count, 'ev.protein.n', { of: e.of ?? 0 }) };
+    case 'carbs':
+      return { title: t('ev.carbs.title'), line: e.count === 0 ? t('ev.carbs.none') : tn(e.count, 'ev.carbs.n', { of: e.of ?? 0 }) };
   }
 }
 

@@ -3,7 +3,7 @@
  * no numeric targets (spec §7). Templates live in assets/data/school.json so another school changes
  * the hall's behaviours without touching code (spec §20).
  */
-import type { Clause, School, StateWord } from './types';
+import type { Clause, School, StateWord } from './types.ts';
 
 export const MAX_ACTIONS = 3;
 

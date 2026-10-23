@@ -1,7 +1,7 @@
 /** Date words for screens, from the string table. */
 import { t, tlist } from '@/i18n';
 
-import { daypart, parseKey, weekday } from './time';
+import { daypart, parseKey, weekday } from './time.ts';
 
 export function longDate(key: string): string {
   const d = parseKey(key);

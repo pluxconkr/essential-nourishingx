@@ -17,6 +17,8 @@ const ICONS = {
   energy: 'flash-outline',
   fullness: 'pizza-outline',
   focus: 'book-outline',
+  protein: 'egg-outline',
+  carbs: 'nutrition-outline',
   check: 'checkmark',
   checkCircle: 'checkmark-circle',
   chevron: 'chevron-forward',

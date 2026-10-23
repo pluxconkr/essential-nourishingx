@@ -60,6 +60,15 @@ describe('displayedStates and balanceFor on the demo weeks', () => {
     expect(attentionStreak(days)).toBeGreaterThanOrEqual(1);
     expect(attentionStreak(displayedStates(scenarioCheckins('stable', today), today))).toBe(0);
   });
+  test('meal photos reach the word through balanceFor: four low-protein lunches turn the stable week into watch (C5)', () => {
+    const meals = ['2027-10-05', '2027-10-06', '2027-10-07', '2027-10-08'].map((date) => ({ date, meal: 'lunch' as const, protein_g: 5, carbs_g: 60 }));
+    const b = balanceFor(scenarioCheckins('stable', today), today, school, meals);
+    expect(b).toMatchObject({ state: 'watch', clause: 'C5', held: false });
+    expect(b.evidence).toHaveLength(4);
+    expect(b.evidence[0]).toEqual({ category: 'protein', count: 4, of: 4 });
+    expect(b.actions).toEqual(school.actionsByClause.C5);
+    expect(balanceFor(scenarioCheckins('stable', today), today, school, []).clause).toBe('D');
+  });
   test('nodata renders no evidence and the A action; others render four lines and ≤ 3 actions', () => {
     const sparse = balanceFor(scenarioCheckins('sparse', today), today, school);
     expect(sparse.evidence).toEqual([]);

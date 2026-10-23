@@ -10,9 +10,10 @@
  *  - "Not enough data" is shown whenever the window has < 4 check-ins; the carried word survives such gaps
  *    unless they last 7 consecutive days (then the window shares no data with it and the fold starts over).
  */
-import { SEVERITY, derive, evaluateRules, windowFor } from './rules';
-import { addDays } from './time';
-import type { Checkin, Clause, DayState, StateWord } from './types';
+import { mealsIn } from './meals.ts';
+import { SEVERITY, derive, evaluateRules, windowFor } from './rules.ts';
+import { addDays } from './time.ts';
+import type { Checkin, Clause, DayState, MealLog, StateWord } from './types.ts';
 
 type Word = Exclude<StateWord, 'nodata'>;
 
@@ -64,12 +65,12 @@ export function foldHysteresis(days: readonly RawDay[]): { shown: StateWord; hel
   return out;
 }
 
-export function displayedStates(checkins: readonly Checkin[], today: string, days: number = HISTORY_DAYS): DayState[] {
+export function displayedStates(checkins: readonly Checkin[], today: string, days: number = HISTORY_DAYS, meals: readonly MealLog[] = []): DayState[] {
   const raws: (RawDay & { date: string; clause: Clause })[] = [];
   for (let i = days - 1; i >= 0; i--) {
     const date = addDays(today, -i);
     const window = windowFor(checkins, date);
-    const { state: raw, clause } = evaluateRules(derive(window));
+    const { state: raw, clause } = evaluateRules(derive(window, mealsIn(meals, date)));
     raws.push({ date, raw, clause, hasCheckin: window[6] !== null });
   }
   const folded = foldHysteresis(raws);

@@ -2,8 +2,8 @@
  * Demo weeks (prototype SCENARIOS): seven days, oldest first, dated so the last day is today.
  * Loaded records carry isDemo and are labelled wherever they appear; never exported.
  */
-import { addDays } from './time';
-import type { Checkin, DemoScenario, Rating, Skipped, Training } from './types';
+import { addDays } from './time.ts';
+import type { Checkin, DemoScenario, Rating, Skipped, Training } from './types.ts';
 
 type Day = { has: false } | { has: true; full: Rating; energy: Rating; focus: Rating; train: Training; skip: Skipped };
 

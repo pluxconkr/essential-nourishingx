@@ -4,7 +4,7 @@
  * low-focus day count. Coverage ("n of 7 days") is shown on the state card itself.
  * Output is structured data with integer counts only; the sentences are reviewed templates in src/i18n/en.ts.
  */
-import type { Clause, Derived, Evidence, EvidenceCategory } from './types';
+import type { Clause, Derived, Evidence, EvidenceCategory } from './types.ts';
 
 /** The inputs each clause tests, in the order the clause reads them. */
 export const CLAUSE_INPUTS: Record<Clause, EvidenceCategory[]> = {
@@ -16,6 +16,8 @@ export const CLAUSE_INPUTS: Record<Clause, EvidenceCategory[]> = {
   C2: ['energy', 'skipped'],
   C3: ['fullness', 'training'],
   C4: ['focus', 'skipped'],
+  C5: ['protein'],
+  C6: ['carbs', 'training'],
   D: ['skipped', 'training', 'fullness', 'energy'],
 };
 
@@ -46,6 +48,10 @@ function one(category: EvidenceCategory, d: Derived): Evidence {
       return { category, count: d.lowEnergyDays };
     case 'focus':
       return { category, count: d.lowFocusDays };
+    case 'protein':
+      return { category, count: d.lowProteinMeals, of: d.mealsLogged };
+    case 'carbs':
+      return { category, count: d.heavyDaysLowCarb, of: d.heavyDaysLogged };
   }
 }
 
