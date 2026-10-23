@@ -79,7 +79,7 @@ the pre-rendered page and the first real frame always match.
 |---|---|---|
 | `npm test` | Rules for every clause, hysteresis, evidence and actions, string rules, every student screen's safety bar, the router's checks, cohort counts, the synthetic cohort, prose checks, the store and sync | nothing |
 | `npm run typecheck` / `npm run lint` | TypeScript and ESLint are clean | nothing |
-| `npm run test:rls` | 44 security boundaries on the real database, including the upload window and closed weeks | `.env.local` |
+| `npm run test:rls` | 47 security boundaries on the real database, including the upload window and closed weeks | `.env.local` |
 | `npm run check:bundles` | the phone bundle has no staff code or Claude SDK; no bundle has a secret | `.env.local` |
 | `npm run e2e:student [photo.jpg]` | a real browser: consent → anonymous account → a real meal photo (about USD 0.04) → sync → reload → delete everything | a served web build, `.env.local` |
 | `npm run e2e:staff` | a real browser: sign-in, every view, word counts equal the stored report, rule tester, menu editor, Regenerate reusing the closed week's report, sign-out | a served web build, the demo staff account, the synthetic cohort |

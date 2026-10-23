@@ -15,7 +15,7 @@
 import { withSupabase } from '@supabase/server';
 import { z } from 'zod';
 
-import { cohortReport, type CohortCheckin, type CohortMeal } from '../../../src/domain/cohort.ts';
+import { cohortReport, type CohortCheckin, type CohortMeal, type CohortReport } from '../../../src/domain/cohort.ts';
 import { addDays, weekday } from '../../../src/domain/time.ts';
 import type { Meal, Rating, Skipped, Training } from '../../../src/domain/types.ts';
 import { PROSE_MODEL, writeProse } from '../_shared/claude.ts';
@@ -33,7 +33,7 @@ const Body = z.object({
 });
 
 /** A closed week's model prose is final. A template report (the model refused, failed the checks or was over budget)
- * may ask the model again from the dashboard, at most once in this window. */
+ * may ask the model again from the dashboard, at most once in this window, about the same stored numbers. */
 const COOLDOWN_MS = 15 * 60_000;
 const PAGE = 1000;
 
@@ -90,19 +90,26 @@ export default {
       return json({ report: existing, cached: true });
     }
 
-    // This week and the previous one, each with the 30-day history their hysteresis reads plus a 7-day window.
-    const since = addDays(weekEnd, -43);
-    const checkinRows = await every<CheckinRow>((a, b) =>
-      admin.from('checkins').select('user_id, day, fullness, energy, focus, training, skipped, cohort').gte('day', since).lte('day', weekEnd).order('user_id').order('day').range(a, b),
-    );
-    const mealRows = await every<MealRow>((a, b) => admin.from('meal_analyses').select('user_id, day, meal, protein_g, carbs_g').gte('day', since).lte('day', weekEnd).order('id').range(a, b));
-    if (!checkinRows || !mealRows) return json({ error: 'unavailable' }, 503);
-    const checkins: CohortCheckin[] = checkinRows.map((r) => ({ userId: r.user_id, date: r.day, fullness: r.fullness, energy: r.energy, focus: r.focus, training: r.training, skipped: r.skipped, synthetic: r.cohort === 'synthetic' }));
-    // numeric columns arrive as strings from PostgREST
-    const meals: CohortMeal[] = mealRows.map((r) => ({ userId: r.user_id, date: r.day, meal: r.meal, protein_g: Number(r.protein_g), carbs_g: Number(r.carbs_g) }));
-
-    const week = cohortReport(checkins, meals, weekEnd);
-    const previous = cohortReport(checkins, meals, addDays(weekEnd, -7));
+    // A closed week's numbers stay as first written for staff: retrying a template report rewrites only the prose, so
+    // a student deleting rows later can never show up as the difference between two versions of the report.
+    let week: CohortReport;
+    let previous: CohortReport;
+    if (!service && existing) {
+      ({ previous, ...week } = existing.aggregates as CohortReport & { previous: CohortReport });
+    } else {
+      // This week and the previous one, each with the 30-day history their hysteresis reads plus a 7-day window.
+      const since = addDays(weekEnd, -43);
+      const checkinRows = await every<CheckinRow>((a, b) =>
+        admin.from('checkins').select('user_id, day, fullness, energy, focus, training, skipped, cohort').gte('day', since).lte('day', weekEnd).order('user_id').order('day').range(a, b),
+      );
+      const mealRows = await every<MealRow>((a, b) => admin.from('meal_analyses').select('user_id, day, meal, protein_g, carbs_g').gte('day', since).lte('day', weekEnd).order('id').range(a, b));
+      if (!checkinRows || !mealRows) return json({ error: 'unavailable' }, 503);
+      const checkins: CohortCheckin[] = checkinRows.map((r) => ({ userId: r.user_id, date: r.day, fullness: r.fullness, energy: r.energy, focus: r.focus, training: r.training, skipped: r.skipped, synthetic: r.cohort === 'synthetic' }));
+      // numeric columns arrive as strings from PostgREST
+      const meals: CohortMeal[] = mealRows.map((r) => ({ userId: r.user_id, date: r.day, meal: r.meal, protein_g: Number(r.protein_g), carbs_g: Number(r.carbs_g) }));
+      week = cohortReport(checkins, meals, weekEnd);
+      previous = cohortReport(checkins, meals, addDays(weekEnd, -7));
+    }
 
     let prose: Prose = templateProse(week, previous);
     let source: 'model' | 'template' = 'template';

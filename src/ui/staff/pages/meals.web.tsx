@@ -35,7 +35,7 @@ export default function StaffMeals() {
       {meals.status === 'error' || spend.status === 'error' ? <Callout icon="info">{ts('common.unavailable')}</Callout> : null}
       <View style={{ marginBottom: 24 }}>
         <Grid>
-          {m && !m.suppressed ? <Kpi label={ts('meals.photos')} value={String(m.analyses)} foot={ts('common.window', { from: m.from, to: m.to })} /> : null}
+          {m && !m.suppressed ? <Kpi label={ts('meals.photos')} value={String(m.analyses)} foot={ts('meals.photos.foot', { from: m.from, to: m.to })} /> : null}
           {m && !m.suppressed ? <Kpi label={ts('col.participants')} value={String(m.students)} foot={ts('meals.participants.foot')} /> : null}
           {m && !m.suppressed ? <Kpi label={ts('meals.lowConf')} value={pct(m.low_confidence_share)} foot={ts('meals.lowConf.foot')} /> : null}
           {s ? <Kpi label={ts('meals.spend.title')} value={ts('meals.spend.value', { spent: Number(s.spent_usd).toFixed(2), cap: Number(s.cap_usd).toFixed(0) })} foot={ts('meals.spend.foot')} testID="kpi-spend" /> : null}

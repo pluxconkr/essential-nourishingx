@@ -155,7 +155,7 @@ labelled as an estimate. Details and every test run: [docs/ai-router.md](docs/ai
 "Delete everything" on the phone calls the `delete-me` function, which deletes the anonymous account; a database
 trigger then removes every row it owned. Staff numbers cover only finished Monday-to-Sunday weeks, so two totals can
 never be subtracted to reveal one student's check-in. The proof is a script that signs in as each kind of user and
-tries every boundary: `npm run test:rls` (44 checks).
+tries every boundary: `npm run test:rls` (47 checks).
 
 ## The staff dashboard
 
@@ -273,8 +273,8 @@ docs/               explanations for students (start with docs/README.md)
 - Photo estimates are rough (about 40 % off on average) and the router has not yet been tested on real student photos.
 - There is no automatic end-of-term deletion yet; rows stay until a student deletes them.
 - Leaked-password checking for staff accounts needs a paid Supabase plan; staff passwords are random 24-character
-  strings created through the Admin API. Staff sign-in has no second factor yet, and a deleted account still changes
-  the live totals of weeks already closed — both listed with what would fix them in
+  strings created through the Admin API. Staff sign-in has no second factor yet and the web build is not hosted, so
+  it has no security headers — both listed with what would fix them in
   [docs/security-and-privacy.md](docs/security-and-privacy.md#known-gaps).
 - All dashboard numbers today come from simulated students, labelled on every view.
 

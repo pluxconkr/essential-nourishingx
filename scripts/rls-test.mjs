@@ -82,6 +82,8 @@ try {
   check('student cannot write a check-in 3 days ahead', denied(r.error), r.error?.message);
   r = await a.rpc('reserve_ai', { p_user: idA, p_fn: 'analyze-meal', p_stage: 'triage', p_model: 'x', p_worst_usd: 0, p_daily_limit: null });
   check('student cannot reserve AI budget', denied(r.error), r.error?.message);
+  r = await a.rpc('clear_staff_snapshots', { p_from: '2026-01-01', p_to: '2026-12-31' });
+  check('student cannot clear the stored staff totals', denied(r.error), r.error?.message);
   r = await a.from('meal_analyses').insert({ user_id: idA, day: today, meal: 'lunch', items: [], kcal: 1, kcal_low: 1, kcal_high: 1, protein_g: 0, carbs_g: 0, fat_g: 0, fiber_g: 0, difficulty: 'easy', tier: 'haiku', confidence: 'low' });
   check('student cannot fabricate meal analyses', denied(r.error), r.error?.message);
   r = await a.from('ai_usage').select('*');
@@ -124,6 +126,11 @@ try {
   check('staff_daily: a day under 10 students shows neither its count nor averages', !r.error && quiet.length > 0 && quiet.every((d) => d.students === null && d.avg_energy === null && d.avg_fullness === null), `${quiet.length} quiet days`);
   r = await staff.rpc('report_week');
   check('staff cannot call report_week (service role only)', denied(r.error), r.error?.message);
+  // A closed week is kept as first shown, so staff cannot make it recompute after a student deletes rows.
+  r = await staff.rpc('clear_staff_snapshots', { p_from: '2026-01-01', p_to: '2026-12-31' });
+  check('staff cannot clear the stored staff totals (service role only)', denied(r.error), r.error?.message);
+  const again = await staff.rpc('staff_overview');
+  check('staff_overview gives the same closed week again', !again.error && JSON.stringify(again.data) === JSON.stringify(ov), JSON.stringify(again.data ?? again.error?.message));
   for (const fn of ['staff_daily', 'staff_meals', 'staff_ai_spend']) {
     r = await staff.rpc(fn, {});
     check(`staff can call ${fn}`, !r.error, r.error?.message);

@@ -38,7 +38,8 @@ its own label, so an older synthetic report is never mistaken for real students.
 
 Every number is for the **latest complete week, Monday to Sunday**, and only once it is *final*: students can send a
 check-in for the last 2 days only, so a week appears three days after its Sunday. A day counts only if 10 or more
-participants checked in on it (*Days shown* says how many of the 7 did). There is no way to pick another window.
+participants checked in on it (*Days shown* says how many of the 7 did). There is no way to pick another window,
+and a closed week's numbers are kept as first shown, even if a student later deletes their rows.
 This is deliberate: live or overlapping totals could be subtracted from each other to reveal one student's check-in
 ([security-and-privacy.md](security-and-privacy.md#why-closed-weeks)).
 

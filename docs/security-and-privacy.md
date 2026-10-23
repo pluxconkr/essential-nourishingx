@@ -104,6 +104,14 @@ away. So every staff number now follows three rules:
 The daily chart ends on the last final day, and the weekly report (`weekly-report`) uses the same closed weeks, so a
 report never changes once written and two reports never overlap.
 
+**Kept as first shown.** A closed week can still lose rows: a student may delete a meal estimate, a check-in or the
+whole account, and that is their right. If the totals were recomputed, the same week seen before and after a
+deletion would give that student's rows away. So the first time staff ask for a closed week (or a final day of the
+daily chart), the answer is stored (`private.staff_snapshots`,
+`supabase/migrations/20261023190830_staff_week_snapshots.sql`) and every later answer is that one. A weekly report
+whose prose fell back to the template can ask the model again, but about the stored numbers. The stored answers are
+group totals only — exactly what staff were already shown — and the student's own rows are still deleted.
+
 The meal-photo numbers follow one more rule (`supabase/migrations/20261023185644_staff_meals_shared_rows.sql`):
 **every number covers the same photos**, those of meal slots with 10 or more participants of their own. Otherwise the
 total minus the slots that are shown would give the hidden slot's count back. The tables of which model answered and
@@ -179,7 +187,7 @@ The order matters, and a few details keep it honest:
 ## How it is tested
 
 `npm run test:rls` (`scripts/rls-test.mjs`) creates two anonymous students and a staff account on the real project
-and tries 44 things, for example:
+and tries 47 things, for example:
 
 - someone with no sign-in cannot read check-ins;
 - student B cannot read, change or delete student A's rows;
@@ -187,7 +195,8 @@ and tries 44 things, for example:
   staff function;
 - a check-in from 2 days ago is accepted, but one 10 days old or 3 days ahead is refused;
 - staff read 0 check-in rows, cannot read the raw AI ledger, and get totals only — for the latest closed
-  Monday-to-Sunday week, with no count when suppressed;
+  Monday-to-Sunday week, with no count when suppressed, the same answer every time, and no way to clear the stored
+  totals;
 - a day with fewer than 10 students comes back with neither its count nor its averages, and the daily list ends on
   the last final day;
 - a deleted student's still-valid token cannot write a check-in, and no meal estimate is stored for a deleted account;
@@ -203,22 +212,22 @@ The test deletes the accounts it made when it finishes.
   project's attempt to turn it on returned HTTP 402. Staff passwords are random 24-character strings made by
   `scripts/create-staff.mjs`.
 - **No automatic end-of-term purge yet.** Rows stay until the student deletes them.
-- **A deletion can still change a closed week.** When a student deletes a meal estimate, a check-in or the whole
-  account, those rows leave the live staff totals for weeks that were already closed, so a staff member comparing
-  the same week before and after could learn something about that one student. Stored weekly reports do not change
-  (an AI report of a closed week is final), but the overview's live totals do. Freezing each closed week's totals in
-  a table when the week closes would remove this; it is the next privacy step, and students keep the right to delete.
-- **Staff sign-in is a password only.** There is no second factor (MFA) yet, and the dashboard is served from the same
-  web address as the student web app without a Content Security Policy. To limit the damage, the staff session is
-  kept in the browser tab's `sessionStorage` and ends when the tab closes. Serving `/staff` from its own address with
-  strict headers, and turning on MFA, are the next steps.
+- **Staff sign-in is a password only.** There is no second factor (MFA) yet: that is a new sign-in step (enrolling an
+  authenticator app, then a code at each sign-in, and `aal2` required by the staff functions) for the school's IT to
+  decide on. The web build is not hosted anywhere yet, so there are no response headers either. When it is, `/staff`
+  should be served from its own address with a strict Content Security Policy; a CSP written into the page itself
+  would have to allow inline scripts and styles (Expo's page start-up and React Native for Web need them) and so
+  would protect little. Until then the staff session is kept in the browser tab's `sessionStorage` and ends when the
+  tab closes.
 - **Anonymous sign-ins have no CAPTCHA.** Supabase limits them to 30 an hour per IP address by default (Auth rate
-  limits), and every photo is paid for out of
-  one lifetime budget, so a determined person could still spend the budget with many accounts — slowly, and never
-  past the cap. A CAPTCHA and a monthly budget would help.
+  limits), and every photo is paid for out of one lifetime budget, so a determined person could still spend the
+  budget with many accounts — slowly, and never past the cap. A CAPTCHA needs an account with a CAPTCHA provider
+  (its keys go into Supabase Auth and the consent screen); a monthly budget would also help.
 - **Dependencies.** `npm audit` (2026-10-24) reports 4 high and 6 moderate advisories, all inside Expo's tooling:
   `node-forge` and `uuid` are used only when building the app, and `decode-uri-component` (via `expo-router`) could
-  at worst slow a page given a crafted link. They go away with Expo patch releases. The Edge Functions' dependencies
-  are pinned in `deno.lock` but not audited by a tool.
+  at worst slow a page given a crafted link. `npm audit fix` would move 57 packages (Expo 57.0.26 to 57.0.31, with
+  peer-dependency conflicts), so it belongs in its own Expo SDK 57 patch update (`npx expo install --fix`) with a
+  full re-test, not in a security fix. The Edge Functions' dependencies are pinned in `deno.lock` but not audited by
+  a tool.
 - The database advisor still lists "anonymous access" on `checkins` and `meal_analyses`. That is intended: every
   student is anonymous, and each of those policies pins rows to `auth.uid()`.
