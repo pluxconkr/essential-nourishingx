@@ -7,13 +7,12 @@
  *   node --env-file=.env.local scripts/eval-router.mjs --label v1-opus --tier opus  # every photo forced onto Opus
  *   options: --only id1,id2   --source n5k|commons   --concurrency 3   --max-usd 3   --effort low|medium|high (with --tier)
  *
- * --tier uses the secret-key eval path (nothing stored). Without it the harness signs in throwaway anonymous
- * students, exactly like the phone. Photos are cached in .cache/eval/ (gitignored); results go to docs/eval/.
+ * Every photo goes through the secret-key eval path: nothing is stored but the cost rows, and the answer carries the
+ * route, triage and cost that a student's answer leaves out. Without --tier the router decides exactly as it does for
+ * a student. Photos are cached in .cache/eval/ (gitignored); results go to docs/eval/.
  */
 import fs from 'node:fs';
 import path from 'node:path';
-
-import { createClient } from '@supabase/supabase-js';
 
 const arg = (name, fallback) => {
   const i = process.argv.indexOf(`--${name}`);
@@ -27,8 +26,8 @@ const SOURCE = arg('source', null);
 const CONCURRENCY = Number(arg('concurrency', 3));
 const MAX_USD = Number(arg('max-usd', 3));
 
-const { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY } = process.env;
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY || !SUPABASE_SECRET_KEY) {
+const { SUPABASE_URL, SUPABASE_SECRET_KEY } = process.env;
+if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
   console.error('Run with: node --env-file=.env.local scripts/eval-router.mjs ...');
   process.exit(2);
 }
@@ -100,21 +99,6 @@ function score(c, body) {
   return s;
 }
 
-const opts = { auth: { persistSession: false, autoRefreshToken: false } };
-const admin = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, opts);
-const students = [];
-async function studentToken(i) {
-  // The function allows 12 analyses per student per day, so a new throwaway student every 10 photos.
-  const k = Math.floor(i / 10);
-  if (!students[k]) {
-    const c = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, opts);
-    const { data, error } = await c.auth.signInAnonymously();
-    if (error) throw error;
-    students[k] = { id: data.user.id, token: data.session.access_token };
-  }
-  return students[k].token;
-}
-
 const truth = await nutrition5k();
 let cases = spec.cases.map((c) => (c.dish ? { ...c, truth: truth.get(c.dish) } : c));
 if (ONLY) cases = cases.filter((c) => ONLY.includes(c.id));
@@ -124,15 +108,13 @@ const day = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York
 let spent = 0;
 const results = [];
 
-async function run(c, i) {
+async function run(c) {
   if (spent >= MAX_USD) return { id: c.id, skipped: 'max-usd reached' };
   const file = c.dish ? `${c.dish}.png` : `${c.id}.jpg`;
   const url = c.dish ? spec.sources.nutrition5k.image.replace('{dish}', c.dish) : c.url;
   const p = await cached(file, url, { pace: c.dish ? 0 : 3000 });
   const media = c.dish ? 'image/png' : 'image/jpeg';
-  const headers = TIER
-    ? { apikey: SUPABASE_SECRET_KEY, 'Content-Type': 'application/json' }
-    : { apikey: SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${await studentToken(i)}`, 'Content-Type': 'application/json' };
+  const headers = { apikey: SUPABASE_SECRET_KEY, 'Content-Type': 'application/json' };
   const t0 = Date.now();
   const payload = JSON.stringify({ image: fs.readFileSync(p).toString('base64'), media_type: media, meal: 'lunch', day, ...(TIER ? { force_tier: TIER } : {}), ...(EFFORT ? { force_effort: EFFORT } : {}) });
   const send = () => fetch(`${SUPABASE_URL}/functions/v1/analyze-meal`, { method: 'POST', headers, body: payload });
@@ -176,13 +158,13 @@ async function run(c, i) {
   return r;
 }
 
-const queue = cases.map((c, i) => [c, i]);
+const queue = [...cases];
 await Promise.all(
   Array.from({ length: CONCURRENCY }, async () => {
     while (queue.length) {
-      const [c, i] = queue.shift();
+      const c = queue.shift();
       try {
-        results.push(await run(c, i));
+        results.push(await run(c));
       } catch (e) {
         results.push({ id: c.id, status: 'harness_error', detail: e.message });
         console.log(`${c.id.padEnd(30)} harness error: ${e.message}`);
@@ -190,7 +172,6 @@ await Promise.all(
     }
   }),
 );
-for (const s of students) if (s) await admin.auth.admin.deleteUser(s.id);
 
 // ---- summary
 const done = results.filter((r) => r.http);

@@ -33,7 +33,7 @@ test('the last day shows every state, and flags stay uncommon (watch + attention
   expect(report.suppressed).toBe(false);
   const s = report.states!;
   for (const word of ['stable', 'watch', 'attention', 'nodata'] as const) expect(s[word]).toBeGreaterThanOrEqual(1);
-  expect(s.watch + s.attention).toBeLessThanOrEqual(0.2 * report.students);
+  expect(s.watch + s.attention).toBeLessThanOrEqual(0.2 * report.students!);
   expect(s.nodata).toBe(2);
 });
 

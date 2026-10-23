@@ -5,6 +5,7 @@
  */
 import schoolJson from '@/assets/data/school.json';
 import type { School } from '@/domain/types';
+import appJson from '../app.json';
 import { en, type Key } from '@/i18n/en';
 import { ESTIMATE_ALLOWLIST, ESTIMATE_WORDS, FORBIDDEN_ALLOWLIST, inventory } from '@/i18n/inventory';
 
@@ -48,6 +49,15 @@ describe('rejection tests', () => {
   });
   test('no percentage sign and no probability anywhere a student reads', () => {
     for (const k of studentKeys) expect(en[k]).not.toMatch(/%/);
+  });
+  test('the OS permission prompts in app.json, which students read too, obey the same rules', () => {
+    const picker = appJson.expo.plugins.find((p) => Array.isArray(p) && p[0] === 'expo-image-picker') as [string, Record<string, string | false>];
+    const prompts = Object.values(picker[1]).filter((s): s is string => typeof s === 'string');
+    expect(prompts).toHaveLength(2);
+    for (const s of prompts) {
+      expect(s).not.toMatch(/%/);
+      for (const { re } of FORBIDDEN) expect(s).not.toMatch(re);
+    }
   });
   test('action templates obey the same rules and carry no numbers', () => {
     for (const list of Object.values(school.actionsByClause)) {

@@ -1,5 +1,6 @@
 /** Your data: see everything, export, delete all; the reminder; timing; meal estimates; demo scenarios. */
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 
 import { roundKcal, shortDate } from '@/domain/format';
 import { formatClock } from '@/domain/time';
@@ -27,6 +28,8 @@ export default function DataScreen() {
     return a.length % 2 ? a[m] : Math.round((a[m - 1] + a[m]) / 2);
   })();
   const recent = [...checkins].reverse().slice(0, 30);
+  // Delete everything waits for the network; a second press must not start a second deletion.
+  const [deleting, setDeleting] = useState(false);
 
   const doExport = async () => {
     if (prefs.demo !== 'live') return showToast(t('data.exportDemo'));
@@ -41,7 +44,11 @@ export default function DataScreen() {
       cancel: t('common.cancel'),
       action: t('data.delete'),
       onConfirm: async () => {
-        if ((await actions.deleteEverything()) === 'offline') return showToast(t('data.delete.offline'));
+        setDeleting(true);
+        if ((await actions.deleteEverything()) === 'offline') {
+          setDeleting(false);
+          return showToast(t('data.delete.offline'));
+        }
         router.replace('/consent');
       },
     });
@@ -120,7 +127,7 @@ export default function DataScreen() {
       <Card padded={false}>
         <Cell icon="info" title={t('privacy.title')} accessory="chevron" onPress={() => router.push('/privacy')} last />
       </Card>
-      <Button title={t('data.delete')} variant="danger" icon="trash" onPress={confirmDelete} testID="delete-everything" />
+      <Button title={t('data.delete')} variant="danger" icon="trash" onPress={confirmDelete} disabled={deleting} testID="delete-everything" />
     </Screen>
   );
 }

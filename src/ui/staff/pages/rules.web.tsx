@@ -1,7 +1,8 @@
 /**
  * /staff/rules · Rule engine: the evaluateRules the phone runs (its one definition is src/domain/rules.ts, imported
  * here — the parity argument), a tester over its inputs, the demo weeks, the rules in order with the firing one
- * highlighted, and where each threshold comes from (docs/thresholds.md). Every number on this page is read from TH.
+ * highlighted, and where each threshold comes from (docs/thresholds.md). Every threshold in the rule listing and the
+ * Value column is read from TH.
  */
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
@@ -15,7 +16,7 @@ import { t } from '@/i18n';
 import { ts, type StaffKey } from '@/i18n/staff';
 import { StateWordView } from '@/ui/balance-widgets';
 import { Button, Footnote, Stepper, Subhead } from '@/ui/primitives';
-import { DataTable, Panel, RuleListing, Section, StaffPage, clauseText } from '@/ui/staff/widgets';
+import { DataTable, Panel, RuleListing, Section, StaffPage, clauseText, fullnessDrop, lowProteinShare } from '@/ui/staff/widgets';
 import { colors } from '@/ui/theme';
 
 type Input = 'n' | 'skipped' | 'heavyDays' | 'lowEnergyDays' | 'lowFocusDays' | 'fullDelta' | 'energyMean' | 'mealsLogged' | 'lowProteinMeals' | 'heavyDaysLowCarb';
@@ -45,12 +46,12 @@ const PROVENANCE: { label: StaffKey; value: string; basis: StaffKey; status: Sta
   { label: 'prov.minCheckins', value: ts('provv.minCheckins', { n: TH.minCheckins }), basis: 'prov.minCheckins.basis', status: 'status.defensible' },
   { label: 'prov.b1', value: ts('provv.b1', { s: TH.b1_skipped, h: TH.b1_heavy }), basis: 'prov.b1.basis', status: 'status.clinician' },
   { label: 'prov.heavy', value: ts('provv.heavy', { a: TH.b1_heavy, b: TH.c1_heavy }), basis: 'prov.heavy.basis', status: 'status.coach' },
-  { label: 'prov.fullness', value: ts('provv.fullness', { a: Math.abs(TH.b2_fullDelta).toFixed(1), b: Math.abs(TH.b3_fullDelta).toFixed(1) }), basis: 'prov.fullness.basis', status: 'status.defensible' },
+  { label: 'prov.fullness', value: ts('provv.fullness', { a: fullnessDrop(TH.b2_fullDelta), b: fullnessDrop(TH.b3_fullDelta) }), basis: 'prov.fullness.basis', status: 'status.defensible' },
   { label: 'prov.energy', value: ts('provv.energy', { a: TH.b2_lowEnergy, b: TH.c2_lowEnergy }), basis: 'prov.energy.basis', status: 'status.defensible' },
   { label: 'prov.focus', value: ts('provv.focus', { a: TH.c4_lowFocus }), basis: 'prov.focus.basis', status: 'status.defensible' },
   { label: 'prov.energyMean', value: ts('provv.energyMean', { m: TH.b3_energyMean }), basis: 'prov.energyMean.basis', status: 'status.clinician' },
   { label: 'prov.hysteresis', value: ts('provv.hysteresis', { n: HYSTERESIS_DAYS }), basis: 'prov.hysteresis.basis', status: 'status.defensible' },
-  { label: 'prov.c5', value: ts('provv.c5', { p: TH.meal_lowProtein_g, share: `${TH.c5_lowShare * 4} in 4`, m: TH.c5_minMeals }), basis: 'prov.c5.basis', status: 'status.defensible' },
+  { label: 'prov.c5', value: ts('provv.c5', { p: TH.meal_lowProtein_g, share: lowProteinShare(), m: TH.c5_minMeals }), basis: 'prov.c5.basis', status: 'status.defensible' },
   { label: 'prov.c6', value: ts('provv.c6', { c: TH.c6_lowCarb_g, k: TH.c6_heavyDaysLowCarb }), basis: 'prov.c6.basis', status: 'status.defensible' },
 ];
 

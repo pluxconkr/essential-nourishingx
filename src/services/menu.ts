@@ -18,6 +18,17 @@ interface MenuFile {
 
 const menu = menuJson as unknown as MenuFile;
 
+/** The weekday and weekend templates (and any dated days) bundled with the app. */
+export const bundledDays: Readonly<Record<string, MenuDay>> = menu.days;
+
+/** The template a date falls back to. */
+export function templateKey(dateKey: string): 'weekday' | 'weekend' {
+  const wd = weekday(dateKey);
+  return wd === 0 || wd === 6 ? 'weekend' : 'weekday';
+}
+
+export const itemCount = (d: MenuDay) => d.breakfast.length + d.lunch.length + d.dinner.length;
+
 export function mealFor(hour: number): Meal {
   if (hour < 10) return 'breakfast';
   if (hour < 14) return 'lunch';
@@ -34,16 +45,15 @@ export interface TodayMenu {
 
 /** `entered` holds the menu days Dining Services entered on the dashboard; they win over the bundled table. */
 export function menuForToday(dateKey: string, hour: number, entered: Record<string, MenuDay> = {}): TodayMenu | null {
-  const wd = weekday(dateKey);
-  const template = wd === 0 || wd === 6 ? 'weekend' : 'weekday';
-  const dated = entered[dateKey] ?? menu.days[dateKey];
-  const day = dated ?? entered[template] ?? menu.days[template];
+  const template = templateKey(dateKey);
+  const dated = entered[dateKey] ?? bundledDays[dateKey];
+  const day = dated ?? entered[template] ?? bundledDays[template];
   if (!day) return null;
   const meal = mealFor(hour);
   return {
     meal,
     items: day[meal],
-    totalItems: day.breakfast.length + day.lunch.length + day.dinner.length,
+    totalItems: itemCount(day),
     source: dated ? 'today' : 'template',
   };
 }

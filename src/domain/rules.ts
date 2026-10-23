@@ -53,19 +53,23 @@ export function derive(window: readonly (Checkin | null)[], meals: readonly Meal
   };
 }
 
+/** The word each clause gives — the only clause-to-word mapping (the staff dashboard reads it too). */
+export const CLAUSE_WORD: Record<Clause, StateWord> = { A: 'nodata', B1: 'attention', B2: 'attention', B3: 'attention', C1: 'watch', C2: 'watch', C3: 'watch', C4: 'watch', C5: 'watch', C6: 'watch', D: 'stable' };
+
 /** First matching clause wins — order is part of the spec. Meal-photo clauses (C5, C6) come last and can only say watch. */
 export function evaluateRules(i: Derived): { state: StateWord; clause: Clause } {
-  if (i.n < TH.minCheckins) return { state: 'nodata', clause: 'A' };
-  if (i.skipped >= TH.b1_skipped && i.heavyDays >= TH.b1_heavy) return { state: 'attention', clause: 'B1' };
-  if (i.lowEnergyDays >= TH.b2_lowEnergy && i.fullDelta <= TH.b2_fullDelta) return { state: 'attention', clause: 'B2' };
-  if (i.skipped >= TH.b3_skipped && i.heavyDays >= TH.b3_heavy && i.fullDelta <= TH.b3_fullDelta && i.energyMean <= TH.b3_energyMean) return { state: 'attention', clause: 'B3' };
-  if (i.skipped >= TH.c1_skipped && i.heavyDays >= TH.c1_heavy && i.fullDelta < 0) return { state: 'watch', clause: 'C1' };
-  if (i.lowEnergyDays >= TH.c2_lowEnergy && i.skipped >= TH.c2_skipped) return { state: 'watch', clause: 'C2' };
-  if (i.fullDelta <= TH.c3_fullDelta && i.heavyDays >= TH.c3_heavy) return { state: 'watch', clause: 'C3' };
-  if (i.lowFocusDays >= TH.c4_lowFocus && i.skipped >= TH.c4_skipped) return { state: 'watch', clause: 'C4' };
-  if (i.mealsLogged >= TH.c5_minMeals && i.lowProteinMeals >= TH.c5_lowShare * i.mealsLogged) return { state: 'watch', clause: 'C5' };
-  if (i.heavyDaysLowCarb >= TH.c6_heavyDaysLowCarb) return { state: 'watch', clause: 'C6' };
-  return { state: 'stable', clause: 'D' };
+  const hit = (clause: Clause) => ({ state: CLAUSE_WORD[clause], clause });
+  if (i.n < TH.minCheckins) return hit('A');
+  if (i.skipped >= TH.b1_skipped && i.heavyDays >= TH.b1_heavy) return hit('B1');
+  if (i.lowEnergyDays >= TH.b2_lowEnergy && i.fullDelta <= TH.b2_fullDelta) return hit('B2');
+  if (i.skipped >= TH.b3_skipped && i.heavyDays >= TH.b3_heavy && i.fullDelta <= TH.b3_fullDelta && i.energyMean <= TH.b3_energyMean) return hit('B3');
+  if (i.skipped >= TH.c1_skipped && i.heavyDays >= TH.c1_heavy && i.fullDelta < 0) return hit('C1');
+  if (i.lowEnergyDays >= TH.c2_lowEnergy && i.skipped >= TH.c2_skipped) return hit('C2');
+  if (i.fullDelta <= TH.c3_fullDelta && i.heavyDays >= TH.c3_heavy) return hit('C3');
+  if (i.lowFocusDays >= TH.c4_lowFocus && i.skipped >= TH.c4_skipped) return hit('C4');
+  if (i.mealsLogged >= TH.c5_minMeals && i.lowProteinMeals >= TH.c5_lowShare * i.mealsLogged) return hit('C5');
+  if (i.heavyDaysLowCarb >= TH.c6_heavyDaysLowCarb) return hit('C6');
+  return hit('D');
 }
 
 /** Severity order for hysteresis; nodata sits outside it. */

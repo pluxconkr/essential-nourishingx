@@ -12,6 +12,9 @@ import { PROSE_MAX_TOKENS, PROSE_SYSTEM, ProseSchema, type Prose } from './weekl
 
 const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY'), maxRetries: 1 });
 
+/** The weekly report's writer: the PROSE_MODEL secret, Claude Opus 5.5 by default. */
+export const PROSE_MODEL = Deno.env.get('PROSE_MODEL') ?? MODEL_ID.opus;
+
 export type ImageMedia = 'image/jpeg' | 'image/png' | 'image/webp';
 
 export interface Call<T> {
@@ -104,7 +107,7 @@ export async function deep(data: string, media: ImageMedia, t: Triage, tier: Tie
  * Opus 5.5 always thinks, so max_tokens leaves room for it. A refusal or any other stop reason means the template. */
 export async function writeProse(table: string, timeoutMs: number): Promise<Call<Prose>> {
   const t0 = Date.now();
-  const model = Deno.env.get('PROSE_MODEL') ?? MODEL_ID.opus;
+  const model = PROSE_MODEL;
   try {
     const res = await client.messages.create(
       { model, max_tokens: PROSE_MAX_TOKENS, output_config: { effort: 'low', format: zodOutputFormat(ProseSchema) }, system: PROSE_SYSTEM, messages: [{ role: 'user', content: table }] },

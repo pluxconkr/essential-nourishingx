@@ -1,7 +1,7 @@
 /**
  * Everything the phone sends to or reads from Supabase (ADR 0001). The local store stays the source of truth:
  * check-ins upload through a queue; meal analyses come back as the student's own rows (RLS). Callers only use
- * this after consent, and every function is a no-op that reports `not_configured` in local-only mode.
+ * this after consent; in local-only mode (no Supabase settings) nothing here touches the network.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { FunctionsHttpError } from '@supabase/supabase-js';
@@ -10,12 +10,28 @@ import type { Checkin, Meal, MealRecord, MenuDay } from '@/domain/types';
 
 import { getSupabase } from './supabase';
 
+/** Sign-in and token refresh set no deadline, and React Native's Android client has none either (OkHttpClientProvider
+ * sets 0 ms), so a stalled one would hold the sync that "Delete everything" waits for. Past 30 s it counts as offline. */
+function within<T>(p: Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error('auth deadline')), 30_000);
+  });
+  return Promise.race([p, deadline]).finally(() => clearTimeout(timer));
+}
+
 /** The anonymous student's id, signing in on first use. Anonymous sign-in collects nothing about the student. */
 async function signedIn(sb: SupabaseClient): Promise<string | null> {
-  const { data } = await sb.auth.getSession();
-  if (data.session) return data.session.user.id;
-  const { data: signed, error } = await sb.auth.signInAnonymously();
-  return error ? null : (signed.user?.id ?? null);
+  try {
+    // An error here (a refresh that failed offline) is not "no session": a new anonymous account would orphan the old one.
+    const { data, error } = await within(sb.auth.getSession());
+    if (error) return null;
+    if (data.session) return data.session.user.id;
+    const { data: signed, error: signInError } = await within(sb.auth.signInAnonymously());
+    return signInError ? null : (signed.user?.id ?? null);
+  } catch {
+    return null;
+  }
 }
 
 /** Starts the anonymous session after consent. Returns false in local-only mode or when offline. */
@@ -90,16 +106,17 @@ export type AnalyzeResult =
   | { status: 'error'; reason: 'not_configured' | 'offline' | 'budget' | 'daily_limit' | 'unclear' | 'unavailable' };
 
 /** Sends one resized photo (base64 JPEG) to the analyze-meal function. The photo is not stored anywhere. */
-export async function analyzeMeal(input: { image: string; mediaType: 'image/jpeg'; meal: Meal; day: string }): Promise<AnalyzeResult> {
+export async function analyzeMeal(input: { image: string; meal: Meal; day: string }): Promise<AnalyzeResult> {
   const sb = await getSupabase();
   if (!sb) return { status: 'error', reason: 'not_configured' };
   if (!(await signedIn(sb))) return { status: 'error', reason: 'offline' };
-  const body = { image: input.image, media_type: input.mediaType, meal: input.meal, day: input.day };
+  const body = { image: input.image, media_type: 'image/jpeg', meal: input.meal, day: input.day };
   for (let attempt = 0; attempt < 2; attempt++) {
-    const { data, error } = await sb.functions.invoke('analyze-meal', { body });
+    // The function stops starting model calls at 135 s and the platform ends it at 150 s.
+    const { data, error } = await sb.functions.invoke('analyze-meal', { body, timeout: 160_000 });
     if (!error) {
       if (data?.status === 'not_food') return { status: 'not_food' };
-      if (data?.status === 'ok') return { status: 'ok', record: toRecord({ ...data.analysis, id: data.id, day: data.day, meal: data.meal, tier: data.tier, difficulty: data.difficulty, kcal_low: data.analysis.kcal_low, kcal_high: data.analysis.kcal_high, created_at: data.created_at }) };
+      if (data?.status === 'ok') return { status: 'ok', record: toRecord({ ...data.analysis, id: data.id, day: data.day, meal: data.meal, tier: data.tier, difficulty: data.difficulty, created_at: data.created_at }) };
       return { status: 'error', reason: 'unavailable' };
     }
     if (!(error instanceof FunctionsHttpError)) return { status: 'error', reason: 'offline' };
@@ -130,13 +147,16 @@ export async function deleteMeal(id: string): Promise<boolean> {
   return !error;
 }
 
-/** Deletes the anonymous account and every row it owns (delete-me function), then forgets the session. */
+/** Deletes the anonymous account and every row it owns (delete-me function), then forgets the session. On any
+ * failure the session is kept, so "Delete everything" can try again instead of orphaning the server copy. */
 export async function deleteCloudAccount(): Promise<boolean> {
   const sb = await getSupabase();
   if (!sb) return true;
-  const { data } = await sb.auth.getSession();
-  if (!data.session) return true;
-  const { error } = await sb.functions.invoke('delete-me', { body: {} });
+  const read = await within(sb.auth.getSession()).catch(() => null);
+  if (!read || read.error) return false;
+  if (!read.data.session) return true;
+  const { error } = await sb.functions.invoke('delete-me', { body: {}, timeout: 30_000 });
+  if (error) return false;
   await sb.auth.signOut({ scope: 'local' });
-  return !error;
+  return true;
 }

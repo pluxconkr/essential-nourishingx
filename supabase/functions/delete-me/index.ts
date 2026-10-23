@@ -8,12 +8,13 @@
 import { withSupabase } from '@supabase/server';
 
 export default {
-  fetch: withSupabase({ auth: 'user' }, async (req, ctx) => {
+  fetch: withSupabase({ auth: 'user', errors: { detailed: false } }, async (req, ctx) => {
     if (req.method !== 'POST') return Response.json({ error: 'method_not_allowed' }, { status: 405 });
     const id = ctx.userClaims?.id;
     if (!id || ctx.jwtClaims?.is_anonymous !== true) return Response.json({ error: 'students_only' }, { status: 403 });
     const { error } = await ctx.supabaseAdmin.auth.admin.deleteUser(id);
-    if (error) return Response.json({ error: 'delete_failed' }, { status: 500 });
+    // Not found: an earlier request deleted the account but its answer never reached the phone, which kept the session to retry.
+    if (error && error.code !== 'user_not_found') return Response.json({ error: 'delete_failed' }, { status: 500 });
     return Response.json({ status: 'deleted' });
   }),
 };

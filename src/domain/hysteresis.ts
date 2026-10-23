@@ -20,6 +20,8 @@ type Word = Exclude<StateWord, 'nodata'>;
 export const HYSTERESIS_DAYS = 3;
 export const HISTORY_DAYS = 30;
 export const NODATA_RESET_DAYS = 7;
+/** Days in a row at Needs attention before the firmer prompt (spec §11). */
+export const FIRM_PROMPT_DAYS = 3;
 
 export interface RawDay {
   raw: StateWord;

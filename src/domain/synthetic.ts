@@ -13,7 +13,7 @@
  */
 import { SCENARIO_WEEKS } from './demo.ts';
 import { addDays, weekday } from './time.ts';
-import type { Meal, Rating, Skipped, Training } from './types.ts';
+import type { Confidence, Meal, MealItem, MealRecord, Rating, Skipped, Training } from './types.ts';
 
 export const SYNTHETIC = { seed: 2027, students: 60, days: 30, examDays: [15, 19], seasonStartDay: 8 } as const;
 
@@ -27,24 +27,11 @@ export interface SyntheticCheckin {
   skipped: Skipped;
 }
 
-export interface SyntheticItem {
-  name: string;
-  portion: string;
-  grams: number;
-  kcal: number;
-  protein_g: number;
-  carbs_g: number;
-  fat_g: number;
-  fiber_g: number;
-  group: string;
-  confidence: 'low' | 'medium' | 'high';
-}
-
 export interface SyntheticMeal {
   userId: string;
   day: string;
   meal: Meal;
-  items: SyntheticItem[];
+  items: MealItem[];
   kcal: number;
   kcal_low: number;
   kcal_high: number;
@@ -53,9 +40,9 @@ export interface SyntheticMeal {
   fat_g: number;
   fiber_g: number;
   groups: string[];
-  difficulty: 'easy' | 'medium' | 'hard';
-  tier: 'haiku' | 'opus' | 'fable';
-  confidence: 'low' | 'medium' | 'high';
+  difficulty: MealRecord['difficulty'];
+  tier: MealRecord['tier'];
+  confidence: Confidence;
 }
 
 export interface SyntheticProfile {
@@ -81,7 +68,7 @@ function prng(seed: number): () => number {
 }
 
 /** Synthetic ids are recognisable: all zeros but the student number. */
-export const syntheticId = (i: number) => `00000000-0000-4000-8000-${String(i + 1).padStart(12, '0')}`;
+const syntheticId = (i: number) => `00000000-0000-4000-8000-${String(i + 1).padStart(12, '0')}`;
 
 // USDA FoodData Central SR Legacy, per 100 g: kcal, protein, carbohydrate, fat, fibre (docs/sources.md).
 const FOOD = {
@@ -139,7 +126,7 @@ function noise(rand: () => number, sd: number): number {
   return Math.sqrt(-2 * Math.log(1 - rand())) * Math.cos(2 * Math.PI * rand()) * sd;
 }
 
-export function profiles(seed: number = SYNTHETIC.seed): SyntheticProfile[] {
+function profiles(seed: number = SYNTHETIC.seed): SyntheticProfile[] {
   const rand = prng(seed);
   const n = SYNTHETIC.students;
   const take = (share: number) => new Set(shuffled(rand, n).slice(0, Math.round(share * n)));
@@ -171,7 +158,7 @@ function training(rand: () => number, p: SyntheticProfile, day: number, wd: numb
 }
 
 function plate(rand: () => number, meal: Exclude<Meal, 'snack'>, scale: number): Omit<SyntheticMeal, 'userId' | 'day' | 'meal'> {
-  const items: SyntheticItem[] = pick(rand, PLATES[meal]).map(([food, grams]) => {
+  const items: MealItem[] = pick(rand, PLATES[meal]).map(([food, grams]) => {
     const f = FOOD[food];
     const g = Math.round(grams * scale * (0.85 + rand() * 0.3));
     const [kcal, p, c, fat, fiber] = f.fdc.map((v) => (v * g) / 100);

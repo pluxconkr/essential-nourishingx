@@ -115,7 +115,8 @@ alert to an adult; the staff dashboard only ever sees counts of 10 or more stude
 3. The screen shows named steps and a timer while it works — never a spinning wheel.
 4. You get the foods it saw, an energy **range** ("About 430–650 kcal"), protein, carbohydrate, fat and fibre,
    anything it found hard to judge, and which model made the estimate. Always labelled as an estimate, never a target.
-5. The photo is not kept anywhere. The estimate is saved as a row only you can read, and you can delete it.
+5. The photo is not kept anywhere: the copies the camera and the resizer leave in the app's cache are deleted as soon
+   as it is sent. The estimate is saved as a row only you can read, and you can delete it.
 
 How the photo is analysed — and how accurate it is — is on its own page: [ai-router.md](ai-router.md).
 
@@ -128,17 +129,25 @@ flowchart LR
   Q -->|"online, after consent"| Up["Upload to Supabase"]
   Up -->|"server confirmed"| Done["Remove from queue"]
   Up -->|"failed"| Q
-  Down["Every sync"] --> M["Your meal estimates, last 31 days"]
+  Q -->|"older than 2 days"| Keep["Stays on the phone only"]
+  Down["Every sync"] --> M["Your meal estimates, last 36 days"]
   Down --> Menu["Today's menu from Dining Services"]
 ```
 
 - The app works completely without a connection; only the meal photo needs one.
 - After consent, the app signs in **anonymously**: Supabase gives the phone a random account with no name, email or
   student ID. Check-ins are uploaded through the queue (`syncQueueRepo` in `src/data/repos.ts`).
+- The server takes check-ins for **today and the 2 days before** only, so the staff totals for a finished week can
+  no longer change ([security-and-privacy.md](security-and-privacy.md#the-upload-window)). A check-in that waited
+  longer than that offline stays on your phone and counts for your own Balance; it is just never uploaded.
+- If you save again while an upload is still on its way, the newer answers are sent right after it.
+- The meal estimates cover 36 days because your word looks back 30 days, and each of those days looks at the 6 days
+  before it.
 - Demo weeks are never uploaded or exported, and they never mix with your real meal photos.
-- **Delete everything** first asks the server to delete the account (the `delete-me` function), which removes every
-  row it owned, then wipes the phone. If the server can't be reached, *nothing* is deleted and the app says so — wiping
-  the phone first would lose the account you need to delete the server copy.
+- **Delete everything** first waits for an upload still on its way, then asks the server to delete the account (the
+  `delete-me` function), which removes every row it owned, then wipes the phone. If the server can't be reached,
+  *nothing* is deleted and the app says so — wiping the phone first would lose the account you need to delete the
+  server copy — and pressing it again later finishes the job.
 
 ## The words on the screen
 

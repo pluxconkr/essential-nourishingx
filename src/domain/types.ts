@@ -78,6 +78,8 @@ export interface Checkin {
 }
 
 export const RATINGS: readonly Rating[] = [1, 2, 3, 4, 5];
+/** Clauses in evaluation order (src/domain/rules.ts). */
+export const CLAUSES: readonly Clause[] = ['A', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'D'];
 export const TRAININGS: readonly Training[] = ['none', 'light', 'moderate', 'heavy'];
 export const SKIPPEDS: readonly Skipped[] = ['none', 'breakfast', 'lunch', 'dinner'];
 

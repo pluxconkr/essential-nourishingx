@@ -52,7 +52,7 @@ flowchart TB
   AM -- "sort, then estimate" --> Claude
   AM -- "the estimate" --> DB
   DM -- "account and its rows" --> DB
-  Staff -- "totals for 10 or more" --> DB
+  Staff -- "totals for 10 or more,<br/>closed weeks only" --> DB
   Staff -- "Regenerate" --> WR
   WR --> DB
   WR -- "one prose call" --> O
@@ -153,8 +153,9 @@ labelled as an estimate. Details and every test run: [docs/ai-router.md](docs/ai
 | AI cost ledger | — | — | totals by model only | — |
 
 "Delete everything" on the phone calls the `delete-me` function, which deletes the anonymous account; a database
-trigger then removes every row it owned. The proof is a script that signs in as each kind of user and tries every
-boundary: `npm run test:rls` (35 checks).
+trigger then removes every row it owned. Staff numbers cover only finished Monday-to-Sunday weeks, so two totals can
+never be subtracted to reveal one student's check-in. The proof is a script that signs in as each kind of user and
+tries every boundary: `npm run test:rls` (44 checks).
 
 ## The staff dashboard
 
@@ -162,7 +163,7 @@ Open `/staff` in a browser (web only — the phone app does not even contain the
 
 | View | What it answers |
 |---|---|
-| Weekly overview | How did this week go? Participation, mean ratings, skipped meals, a short report in plain English |
+| Weekly overview | How did the last complete week go? Participation, mean ratings, skipped meals, a short report in plain English |
 | Menu performance | What do photographed plates contain, by meal? Any average below published guidance? |
 | Meal photos & AI | Which models answered, how hard the photos were, and how much of the USD 20 AI budget is spent |
 | Menu table & reminder | Enter the menu; phones pick it up on their next sync |
@@ -178,17 +179,23 @@ sequenceDiagram
   participant WR as weekly-report function
   participant DB as Postgres
   participant O as Claude Opus 5.5
-  St->>D: Regenerate this week
+  St->>D: Regenerate the report
   D->>WR: Request with the staff sign-in
-  WR->>DB: Read six weeks of check-ins
-  WR->>WR: Run the phone's rules for every participant, keep counts only
-  alt fewer than 10 participants
-    WR->>DB: Save "not reported"
-  else 10 or more
-    WR->>O: One call with the table of counts
-    O-->>WR: At most 180 words and a confidence word
-    WR->>WR: Check every number and word, or use the template
-    WR->>DB: Save the weekly report
+  WR->>DB: Which week is the latest closed one?
+  alt that week already has an AI-written report
+    WR-->>D: The stored report: a closed week never changes
+  else no report yet, or a template one
+    WR->>DB: Read the week and the six weeks its words look back on
+    WR->>WR: Run the phone's rules for every participant, keep counts only
+    alt fewer than 10 participants
+      WR->>DB: Save "not reported"
+    else 10 or more
+      WR->>DB: Reserve the call's worst-case cost in the AI ledger
+      WR->>O: One call with the table of counts
+      O-->>WR: At most 180 words and a confidence word
+      WR->>WR: Check every number and word, or use the template
+      WR->>DB: Save the weekly report
+    end
   end
   D-->>St: Counts, prose and where the prose came from
 ```
@@ -266,7 +273,9 @@ docs/               explanations for students (start with docs/README.md)
 - Photo estimates are rough (about 40 % off on average) and the router has not yet been tested on real student photos.
 - There is no automatic end-of-term deletion yet; rows stay until a student deletes them.
 - Leaked-password checking for staff accounts needs a paid Supabase plan; staff passwords are random 24-character
-  strings created through the Admin API.
+  strings created through the Admin API. Staff sign-in has no second factor yet, and a deleted account still changes
+  the live totals of weeks already closed — both listed with what would fix them in
+  [docs/security-and-privacy.md](docs/security-and-privacy.md#known-gaps).
 - All dashboard numbers today come from simulated students, labelled on every view.
 
 ## Credits

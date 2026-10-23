@@ -2,6 +2,7 @@
 import schoolJson from '@/assets/data/school.json';
 import { balanceFor } from '@/domain/balance';
 import { MIN_GROUP, cohortReport, type CohortCheckin } from '@/domain/cohort';
+import { addDays } from '@/domain/time';
 import { scenarioCheckins } from '@/domain/demo';
 import type { School } from '@/domain/types';
 
@@ -31,12 +32,34 @@ test('every counted word is the word the phone shows that student', () => {
   expect(report.syntheticShare).toBe(0.5);
 });
 
-test('fewer than 10 students suppresses the whole week: no states, no clauses', () => {
+test('fewer than 10 students suppresses the whole week: no states, no clauses, not even the exact count', () => {
   const report = cohortReport(cohort(MIN_GROUP - 1), [], today);
-  expect(report).toEqual({ from: '2027-10-02', to: today, students: 9, suppressed: true });
+  expect(report).toEqual({ from: '2027-10-02', to: today, suppressed: true });
 });
 
 test('a student with no check-in this week is not counted', () => {
   const rows = cohort(10).map((r) => (r.userId === 'u0' ? { ...r, date: '2027-09-20' } : r));
-  expect(cohortReport(rows, [], today)).toMatchObject({ students: 9, suppressed: true });
+  expect(cohortReport(rows, [], today)).toEqual({ from: '2027-10-02', to: today, suppressed: true });
+});
+
+test('a day with fewer than 10 students is left out of the week means, so it cannot be recovered by subtraction', () => {
+  // 12 students check in with energy 3 on six days; on the quiet day only one student checks in, with energy 5.
+  const quietDay = addDays(today, -1);
+  const rows: CohortCheckin[] = [];
+  for (let i = 0; i < 12; i++) {
+    for (let d = 0; d < 7; d++) {
+      const date = addDays(today, -d);
+      if (date === quietDay && i > 0) continue;
+      rows.push({ userId: `u${i}`, date, fullness: 3, energy: date === quietDay ? 5 : 3, focus: 3, training: 'none', skipped: 'none', synthetic: false });
+    }
+  }
+  const report = cohortReport(rows, [], today);
+  expect(report.suppressed).toBe(false);
+  expect(report.checkins).toBe(12 * 6);
+  expect(report.meanEnergy).toBe(3);
+  // A 13th student seen only on the quiet day is not a participant either, as in the SQL staff_overview: otherwise
+  // the report's count minus the overview's would single them out.
+  const withLoner = cohortReport([...rows, { userId: 'u12', date: quietDay, fullness: 3, energy: 5, focus: 3, training: 'none', skipped: 'none', synthetic: false }], [], today);
+  expect(withLoner.students).toBe(12);
+  expect(Object.values(withLoner.states!).reduce((a, b) => a + b, 0)).toBe(12);
 });

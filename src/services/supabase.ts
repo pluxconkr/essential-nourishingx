@@ -20,6 +20,8 @@ export function getSupabase(): Promise<SupabaseClient | null> {
       const { createClient } = await import('@supabase/supabase-js');
       return createClient(cfg.url, cfg.publishableKey, {
         auth: { storage: localStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false },
+        // A hung request would hold the sync, and "Delete everything" waits for the sync.
+        db: { timeout: 20_000 },
       });
     })();
   }

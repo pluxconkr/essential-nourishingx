@@ -60,7 +60,7 @@ Then the demo data:
 
 ```bash
 npm run staff:create        # demo staff account; its sign-in goes to .env.staff.local (ignored by git)
-npm run seed:synthetic      # 60 simulated students x 30 days + four weekly reports (one prose call, about USD 0.015)
+npm run seed:synthetic      # 60 simulated students x 30 days up to the latest closed week + four weekly reports (one prose call, about USD 0.013)
 ```
 
 ## The web build and the dashboard
@@ -79,10 +79,10 @@ the pre-rendered page and the first real frame always match.
 |---|---|---|
 | `npm test` | Rules for every clause, hysteresis, evidence and actions, string rules, every student screen's safety bar, the router's checks, cohort counts, the synthetic cohort, prose checks, the store and sync | nothing |
 | `npm run typecheck` / `npm run lint` | TypeScript and ESLint are clean | nothing |
-| `npm run test:rls` | 35 security boundaries on the real database | `.env.local` |
+| `npm run test:rls` | 44 security boundaries on the real database, including the upload window and closed weeks | `.env.local` |
 | `npm run check:bundles` | the phone bundle has no staff code or Claude SDK; no bundle has a secret | `.env.local` |
 | `npm run e2e:student [photo.jpg]` | a real browser: consent → anonymous account → a real meal photo (about USD 0.04) → sync → reload → delete everything | a served web build, `.env.local` |
-| `npm run e2e:staff` | a real browser: sign-in, every view, word counts equal the stored report, rule tester, menu editor, Regenerate, sign-out | a served web build, the demo staff account, the synthetic cohort |
+| `npm run e2e:staff` | a real browser: sign-in, every view, word counts equal the stored report, rule tester, menu editor, Regenerate reusing the closed week's report, sign-out | a served web build, the demo staff account, the synthetic cohort |
 | `npm run db:advisors` | Supabase's own security and performance checks | `.env.local` |
 | `node --env-file=.env.local scripts/eval-router.mjs --label my-run` | the photo router's accuracy on 29 labelled photos (about USD 1) | `.env.local` |
 

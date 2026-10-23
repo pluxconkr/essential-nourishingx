@@ -7,9 +7,10 @@ import { usePathname, useRouter, type Href } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
+import schoolJson from '@/assets/data/school.json';
+import { SYNTHETIC } from '@/domain/synthetic';
 import { ts, type StaffKey } from '@/i18n/staff';
 import { staffOverview, staffSignOut } from '@/services/staff';
-import { school } from '@/store/derived';
 
 import { Footnote, SectionLabel } from '../primitives';
 import { GUTTER, MIN_TAP, STAFF, colors, radius, text, tint } from '../theme';
@@ -37,15 +38,14 @@ const NAV: { group: StaffKey; items: { href: Href; label: StaffKey }[] }[] = [
   },
 ];
 
-const loadOverview = () => staffOverview(7);
-
-/** "Synthetic data" on every view while any simulated student is in this week's numbers (plan R10; ADR 0001). */
+/** "Synthetic data" on every view while any simulated student is in the week shown (plan R10; ADR 0001). */
 function Banner() {
-  const [overview] = useLoad(loadOverview);
+  const [overview] = useLoad(staffOverview);
   if (overview.status !== 'ready' || overview.data.suppressed) return null;
   const share = overview.data.synthetic_share ?? 0;
   if (share <= 0) return null;
-  const msg = share >= 1 ? ts('banner.allSynthetic', { n: overview.data.students }) : ts('banner.someSynthetic', { share: pct(share), n: overview.data.students });
+  const n = String(overview.data.students);
+  const msg = share >= 1 ? ts('banner.allSynthetic', { n, students: SYNTHETIC.students, days: SYNTHETIC.days, seed: SYNTHETIC.seed }) : ts('banner.someSynthetic', { share: pct(share), n });
   return (
     <View style={styles.banner} accessibilityRole="alert" testID="staff-banner">
       <Text style={[text.footnote, { color: colors.white }]}>{msg}</Text>
@@ -87,7 +87,7 @@ export function StaffShell({ email, children }: { email: string; children: React
       {narrow ? null : (
         <View style={styles.sidebar}>
           <Text style={text.headline}>{ts('shell.title')}</Text>
-          <Footnote style={{ marginTop: 2, marginBottom: 18 }}>{school.name}</Footnote>
+          <Footnote style={{ marginTop: 2, marginBottom: 18 }}>{schoolJson.name}</Footnote>
           {NAV.map((g) => (
             <View key={g.group} style={{ marginBottom: 16 }}>
               <SectionLabel style={{ marginBottom: 4, paddingHorizontal: 10 }}>{ts(g.group)}</SectionLabel>

@@ -22,7 +22,7 @@ export type Prose = z.infer<typeof ProseSchema>;
 export interface WeekNumbers {
   from: string;
   to: string;
-  students: number;
+  students?: number;
   suppressed: boolean;
   syntheticShare?: number;
   checkins?: number;
@@ -50,7 +50,7 @@ export function displayTable(week: WeekNumbers, previous?: WeekNumbers | null): 
     `Check-ins with heavy training: ${pct(week.heavyShare ?? 0)}`,
     `Balance words from the same rules as the phone: Stable ${week.states.stable}, Watch ${week.states.watch}, Needs attention ${week.states.attention}, Not enough data ${week.states.nodata}`,
     `Participants at Needs attention 3 or more days in a row: ${week.attentionStreak3}`,
-    `Participants who added at least one meal photo: ${week.mealStudents}`,
+    `Participants who added at least one meal photo: ${week.mealStudents ?? 'fewer than 10'}`,
   );
   if (previous && !previous.suppressed && previous.states) {
     lines.push(
@@ -65,29 +65,50 @@ The table you get is all there is: group numbers only, already checked so that n
 
 Write at most 180 words in 1 to 3 short paragraphs of plain English.
 - Always give this week's four Balance word counts (Stable, Watch, Needs attention, Not enough data) and the number at Needs attention 3 or more days in a row; the Health Center reads those first.
-- Use only numbers that appear in the table, copied exactly. Never work out a new number: no differences, no sums, no percentages of your own.
+- Use only numbers that appear in the table, written as digits exactly as the table shows them, and dates as YYYY-MM-DD. Never work out a new number (no differences, sums, ratios or percentages of your own) and never spell a number as a word.
 - Say "participants", never "students".
 - Describe what the numbers show; do not explain why. Do not write "because", "cause", "due to", "leads to", "results in", "proves" or "improves health".
 - No health or diagnostic language: never "diagnosis", "risk", "RED-S", "disorder" or similar. The Balance words are rules about check-ins, not a health assessment.
 - Never single out a person. You may name one thing about the group or the dining hall worth watching next week.
 - If many participants are simulated, say so plainly.
-Then give your confidence in the summary as one word: High (the pattern holds across four or more weeks), Medium (true of this week), Low (suggestive only, for example mostly simulated data or few check-ins), and one sentence on why.`;
+Then give your confidence in the summary as one word: High (the pattern holds across 4 or more weeks), Medium (true of this week), Low (suggestive only, for example mostly simulated data or few check-ins), and one sentence on why. That sentence follows the same number rules: the table holds this week and the previous one, so write "this week and the previous week" instead of counting the weeks.`;
 
 const FORBIDDEN = /\b(because|causes?|caused|causing|leads? to|led to|results? in|due to|proves?|improves? health|diagnos\w*|RED-S|risks?|disorders?|students?)\b/i;
+// Spelled-out numbers and comparisons that state a number the table does not hold ("two more", "doubled").
+const NUMBER_WORDS = /\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|half|halved|double[ds]?|doubling|twice|triple[ds]?|tripling|quarter|percentage points?)\b/i;
+// Fixed phrases whose digits are not data: the rating scale, the reporting threshold, the streak length and the High
+// confidence bar from PROSE_SYSTEM.
+const FIXED_PHRASES = /\b1-5\b|\b(?:under|fewer than|at least) 10\b|\b3 or more\b|\b4 or more weeks\b/gi;
 const MAX_WORDS = 180;
 const numbers = (s: string) => s.match(/\d+(?:\.\d+)?/g) ?? [];
 
-/** The plan's prose checks: length, numbers copied from the table only, no causal or diagnostic words, "participants". */
-export function checkProse(p: Prose, table: string): string[] {
+/** The numbers the prose may use: the week's values as the table shows them, and nothing else. */
+function allowedNumbers(week: WeekNumbers, previous?: WeekNumbers | null): Set<string> {
+  const out = new Set<string>();
+  for (const w of [week, previous]) {
+    if (!w || w.suppressed || !w.states) continue;
+    for (const v of [w.students, w.checkins, w.meanEnergy, w.meanFullness, w.meanFocus, w.attentionStreak3, w.mealStudents, ...Object.values(w.states)]) if (v != null) out.add(String(v));
+    for (const share of [w.syntheticShare, w.skippedShare, w.heavyShare]) if (share != null) out.add(String(Math.round(share * 100)));
+  }
+  return out;
+}
+
+/** The plan's prose checks: length, numbers copied from the week's values only (dates and fixed phrases aside), no
+ * spelled-out numbers, no causal or diagnostic words, "participants". */
+export function checkProse(p: Prose, week: WeekNumbers, previous?: WeekNumbers | null): string[] {
   const problems: string[] = [];
   const text = [...p.paragraphs, p.why].join(' ');
   const words = p.paragraphs.join(' ').split(/\s+/).filter(Boolean).length;
   if (words > MAX_WORDS) problems.push(`${words} words (limit ${MAX_WORDS})`);
-  const allowed = new Set(numbers(table));
-  const invented = numbers(text).filter((n) => !allowed.has(n));
+  const allowed = allowedNumbers(week, previous);
+  let data = text.replace(FIXED_PHRASES, ' ');
+  for (const d of [week.from, week.to, previous?.from, previous?.to]) if (d) data = data.split(d).join(' ');
+  const invented = numbers(data).filter((n) => !allowed.has(n));
   if (invented.length) problems.push(`numbers not in the table: ${[...new Set(invented)].join(', ')}`);
   const bad = text.match(FORBIDDEN);
   if (bad) problems.push(`forbidden word "${bad[0]}"`);
+  const spelled = text.match(NUMBER_WORDS);
+  if (spelled) problems.push(`number written as a word: "${spelled[0]}"`);
   return problems;
 }
 

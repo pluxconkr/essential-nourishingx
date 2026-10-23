@@ -1,6 +1,7 @@
 /**
- * /staff · Weekly overview: this week's KPIs (n ≥ 10 aggregates), the weekly report in prose (model or template,
- * labelled), 30 days of daily means, energy by day of week, and how to read it all honestly.
+ * /staff · Weekly overview: the latest closed week's KPIs (n ≥ 10 aggregates), the weekly report in prose (model or
+ * template, labelled, and labelled synthetic when it is), 30 final days of daily means, energy by day of week, and how
+ * to read it all honestly.
  */
 import { useCallback, useState } from 'react';
 import { View } from 'react-native';
@@ -10,14 +11,11 @@ import { tlist } from '@/i18n';
 import { ts } from '@/i18n/staff';
 import { generateReport, latestReports, staffDaily, staffOverview, type DailyRow, type WeeklyReport } from '@/services/staff';
 import { Button, Callout, Footnote, Subhead } from '@/ui/primitives';
-import { BarRow, Bullets, DailyChart, Grid, Kpi, Panel, Section, StaffPage, num, pct, useLoad } from '@/ui/staff/widgets';
+import { BarRow, Bullets, DailyChart, Grid, Kpi, Panel, Section, StaffPage, modelName, num, pct, useLoad } from '@/ui/staff/widgets';
 import { colors } from '@/ui/theme';
 
-const loadOverview = () => staffOverview(7);
-const loadDaily = () => staffDaily(30);
 const loadReports = () => latestReports(1);
 
-const MODEL_NAME: Record<string, string> = { 'claude-opus-5-5': 'Claude Opus 5.5', 'claude-fable-5-1': 'Claude Fable 5.1', 'claude-haiku-5-5': 'Claude Haiku 5.5' };
 const when = (iso: string) => new Date(iso).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
 
 function ProseCard({ report }: { report: WeeklyReport }) {
@@ -31,10 +29,11 @@ function ProseCard({ report }: { report: WeeklyReport }) {
       ))}
       <Footnote style={{ marginTop: 4 }}>
         {report.prose_source === 'model'
-          ? ts('overview.prose.model', { model: MODEL_NAME[report.model ?? ''] ?? report.model ?? '', time: when(report.generated_at), confidence: a.proseConfidence ?? '' })
+          ? ts('overview.prose.model', { model: modelName(report.model ?? ''), time: when(report.generated_at), confidence: a.proseConfidence ?? '' })
           : ts('overview.prose.template', { time: when(report.generated_at) })}
       </Footnote>
       {a.proseWhy ? <Footnote style={{ marginTop: 2 }}>{ts('overview.prose.why', { why: a.proseWhy })}</Footnote> : null}
+      {a.syntheticShare ? <Footnote style={{ marginTop: 2 }} testID="staff-prose-synthetic">{ts('report.synthetic', { share: pct(a.syntheticShare) })}</Footnote> : null}
     </Panel>
   );
 }
@@ -53,8 +52,8 @@ function byWeekday(rows: DailyRow[]): { day: string; mean: number }[] {
 }
 
 export default function StaffOverview() {
-  const [overview] = useLoad(loadOverview);
-  const [daily] = useLoad(loadDaily);
+  const [overview] = useLoad(staffOverview);
+  const [daily] = useLoad(staffDaily);
   const [reports, reloadReports] = useLoad(loadReports);
   const [writing, setWriting] = useState<'idle' | 'working' | 'failed' | 'cached'>('idle');
 
@@ -78,6 +77,7 @@ export default function StaffOverview() {
         {o && !o.suppressed ? (
           <Grid>
             <Kpi label={ts('kpi.participants')} value={String(o.students)} foot={ts('kpi.participants.foot')} testID="kpi-participants" />
+            <Kpi label={ts('kpi.days')} value={String(o.days_shown)} foot={ts('kpi.days.foot')} testID="kpi-days" />
             <Kpi label={ts('kpi.perStudent')} value={num(o.checkins_per_student)} foot={ts('kpi.perStudent.foot')} />
             <Kpi label={ts('kpi.energy')} value={num(o.avg_energy, 2)} foot={prevFoot(prev?.meanEnergy)} />
             <Kpi label={ts('kpi.fullness')} value={num(o.avg_fullness, 2)} foot={prevFoot(prev?.meanFullness)} />

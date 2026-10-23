@@ -5,6 +5,7 @@
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 
+import { FIRM_PROMPT_DAYS } from '@/domain/hysteresis';
 import { t, tn } from '@/i18n';
 import { school, useBalance, useToday } from '@/store/derived';
 import { ActionRow, AttentionCard, EvidenceRow, StateWordView, WeekStrip, stateWord } from '@/ui/balance-widgets';
@@ -52,7 +53,7 @@ export default function BalanceScreen() {
       )}
 
       {b.state === 'attention' ? (
-        <AttentionCard phoneDisplay={school.healthCenter.phoneDisplay} phone={school.healthCenter.phone} days={b.attentionStreak} firm={b.attentionStreak >= 3} onReach={() => router.push('/health')} messageText={t('attention.messageText')} />
+        <AttentionCard phoneDisplay={school.healthCenter.phoneDisplay} phone={school.healthCenter.phone} days={b.attentionStreak} firm={b.attentionStreak >= FIRM_PROMPT_DAYS} onReach={() => router.push('/health')} messageText={t('attention.messageText')} />
       ) : null}
 
       <SectionHeader>{t('balance.from.title')}</SectionHeader>

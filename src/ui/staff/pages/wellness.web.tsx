@@ -1,21 +1,22 @@
 /**
  * /staff/wellness · Aggregate states: the Balance word each participant sees, counted by the weekly report
- * (cohortReport → the phone's balanceFor), four weeks as counts not rates, which rule chose the word, and why
- * there is no list of students behind any number ("Not hidden — not built").
+ * (cohortReport → the phone's balanceFor), four closed weeks as counts not rates, which rule chose the word, and why
+ * there is no list of students behind any number ("Not hidden — not built"). The word, clause and streak counts are
+ * shown even under 10 inside a reported week, the documented exception in docs/security-and-privacy.md.
  */
 import { View } from 'react-native';
 
-import type { Clause, StateWord } from '@/domain/types';
+import { CLAUSE_WORD } from '@/domain/rules';
+import { CLAUSES, type StateWord } from '@/domain/types';
 import { t } from '@/i18n';
 import { ts } from '@/i18n/staff';
 import { latestReports } from '@/services/staff';
 import { Callout, Cell, Footnote, Subhead } from '@/ui/primitives';
-import { BarRow, Bullets, CLAUSES, DataTable, Grid, Panel, Section, StaffPage, StateCount, clauseText, useLoad } from '@/ui/staff/widgets';
+import { BarRow, Bullets, DataTable, Grid, Panel, Section, StaffPage, StateCount, clauseText, pct, useLoad } from '@/ui/staff/widgets';
 import { colors, stateTone } from '@/ui/theme';
 
 const WORDS: readonly StateWord[] = ['stable', 'watch', 'attention', 'nodata'];
 const loadReports = () => latestReports(4);
-const severity = (c: Clause): StateWord => (c === 'A' ? 'nodata' : c === 'D' ? 'stable' : c.startsWith('B') ? 'attention' : 'watch');
 
 export default function StaffWellness() {
   const [reports] = useLoad(loadReports);
@@ -37,13 +38,14 @@ export default function StaffWellness() {
               ))}
             </Grid>
             <Subhead style={{ marginTop: 12, color: colors.ink }}>{ts('wellness.streak', { n: latest.attentionStreak3 ?? 0 })}</Subhead>
+            {latest.syntheticShare ? <Footnote style={{ marginTop: 6 }}>{ts('report.synthetic', { share: pct(latest.syntheticShare) })}</Footnote> : null}
           </Section>
 
           <Section title={ts('wellness.trend.title')}>
             <DataTable
               testID="wellness-trend"
-              columns={[{ label: ts('wellness.trend.week'), flex: 1.4 }, ...WORDS.map((w) => ({ label: t(`state.${w}`), numeric: true })), { label: ts('col.participants'), numeric: true }]}
-              rows={[...list].reverse().map((r) => [r.week_start, ...WORDS.map((w) => (r.aggregates.suppressed ? null : (r.aggregates.states?.[w] ?? null))), r.aggregates.students])}
+              columns={[{ label: ts('wellness.trend.week'), flex: 1.4 }, ...WORDS.map((w) => ({ label: t(`state.${w}`), numeric: true })), { label: ts('col.participants'), numeric: true }, { label: ts('col.synthetic'), numeric: true }]}
+              rows={[...list].reverse().map((r) => [r.week_start, ...WORDS.map((w) => (r.aggregates.suppressed ? null : (r.aggregates.states?.[w] ?? null))), r.aggregates.students ?? null, r.aggregates.suppressed ? null : pct(r.aggregates.syntheticShare)])}
             />
           </Section>
 
@@ -51,7 +53,7 @@ export default function StaffWellness() {
             <Panel>
               {CLAUSES.filter((c) => (latest.clauses?.[c] ?? 0) > 0).map((c) => (
                 <View key={c}>
-                  <BarRow label={`${c} · ${t(`state.${severity(c)}`)}`} share={(latest.clauses?.[c] ?? 0) / latest.students} value={String(latest.clauses?.[c] ?? 0)} color={stateTone[severity(c)].dot} />
+                  <BarRow label={`${c} · ${t(`state.${CLAUSE_WORD[c]}`)}`} share={(latest.clauses?.[c] ?? 0) / latest.students!} value={String(latest.clauses?.[c] ?? 0)} color={stateTone[CLAUSE_WORD[c]].dot} />
                   <Footnote style={{ marginLeft: 2, marginBottom: 4 }}>{clauseText(c)}</Footnote>
                 </View>
               ))}

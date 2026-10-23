@@ -1,11 +1,11 @@
 import schoolJson from '@/assets/data/school.json';
 import { MAX_ACTIONS, actionsFor } from '@/domain/actions';
 import { CLAUSE_INPUTS, buildEvidence, evidenceCategories } from '@/domain/evidence';
-import type { Clause, Derived, School } from '@/domain/types';
+import { CLAUSES, type Derived, type School } from '@/domain/types';
 import { en } from '@/i18n/en';
 
 const school = schoolJson as unknown as School;
-const CLAUSES: Clause[] = ['A', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'D'];
+
 const derived: Derived = { n: 7, skipped: 3, heavyDays: 4, lowEnergyDays: 3, lowFocusDays: 4, fullDelta: -0.7, energyMean: 2.4, focusMean: 2.1, fullMean: 2.9, mealsLogged: 4, lowProteinMeals: 3, heavyDaysLogged: 3, heavyDaysLowCarb: 2 };
 
 describe('evidence is chosen by the firing clause', () => {

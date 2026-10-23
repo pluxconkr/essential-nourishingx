@@ -1,7 +1,7 @@
 /**
- * /staff/menu · Menu performance: what participants photographed in the last 7 days (staff_meals, n ≥ 10 per meal and
- * per food group), the actions Dining Services can take when an average falls below published guidance, and the menu
- * phones show today. Estimates, not measurements; photos are optional and self-selected.
+ * /staff/menu · Menu performance: what participants photographed in the latest closed week (staff_meals, n ≥ 10 per
+ * meal and per food group), the actions Dining Services can take when an average falls below published guidance, and
+ * the menu phones show today. Estimates, not measurements; photos are optional and self-selected.
  */
 import { useMemo } from 'react';
 import { View } from 'react-native';
@@ -21,8 +21,6 @@ const PROTEIN_PER_MEAL_G = 20;
 // DRI carbohydrate RDA 130 g/day for every age from 1 year, about 43 g per meal over three meals (docs/thresholds.md).
 const CARBS_PER_MEAL_G = 130 / 3;
 
-const loadMeals = () => staffMeals(7);
-
 /** Suggestions only where an average photographed meal falls below the cited guidance; never a target for a student. */
 function actions(m: MealsSummary): string[] {
   const slot = (meal: Meal) => m.by_meal?.find((r) => r.meal === meal && !r.suppressed);
@@ -35,7 +33,7 @@ function actions(m: MealsSummary): string[] {
 }
 
 export default function StaffMenu() {
-  const [meals] = useLoad(loadMeals);
+  const [meals] = useLoad(staffMeals);
   const [menus] = useLoad(menuRows);
   const m = meals.status === 'ready' ? meals.data : null;
 
@@ -55,7 +53,7 @@ export default function StaffMenu() {
               testID="menu-slots"
               columns={[{ label: ts('col.meal'), flex: 1.2 }, { label: ts('col.photos'), numeric: true }, { label: ts('col.participants'), numeric: true }, { label: ts('col.kcal'), numeric: true }, { label: ts('col.protein'), numeric: true }, { label: ts('col.carbs'), numeric: true }, { label: ts('col.fat'), numeric: true }, { label: ts('col.fiber'), numeric: true }]}
               rows={(m.by_meal ?? []).map((r) => [
-                r.meal === 'snack' ? t('meal.slot.snack') : t(`time.meal.${r.meal as Exclude<Meal, 'snack'>}`),
+                t(`meal.slot.${r.meal as Meal}`),
                 r.analyses,
                 r.students,
                 r.suppressed ? null : num(r.avg_kcal, 0),

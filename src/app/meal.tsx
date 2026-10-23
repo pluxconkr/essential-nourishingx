@@ -15,6 +15,7 @@ import type { Meal, MealRecord } from '@/domain/types';
 import { t } from '@/i18n';
 import type { AnalyzeResult } from '@/services/cloud';
 import { mealFor } from '@/services/menu';
+import { deletePhotoFiles } from '@/services/photo-files';
 import { actions } from '@/store/appStore';
 import { cloudEnabled, useToday } from '@/store/derived';
 import { ChoiceRow, TimerPill } from '@/ui/checkin-widgets';
@@ -33,13 +34,19 @@ type Phase =
   | { kind: 'notFood' }
   | { kind: 'error'; reason: Extract<AnalyzeResult, { status: 'error' }>['reason'] };
 
-/** Base64 JPEG no larger than MAX_SIDE on the long edge. The picker's own width/height can be 0, so measure first. */
+/** Base64 JPEG no larger than MAX_SIDE on the long edge. The picker's own width/height can be 0, so measure first.
+ * The picker's copy and the resized file are deleted here; only the base64 string goes on. */
 async function shrink(uri: string): Promise<string | null> {
-  const original = await ImageManipulator.manipulate(uri).renderAsync();
-  const long = Math.max(original.width, original.height);
-  const image = long > MAX_SIDE ? await ImageManipulator.manipulate(original).resize(original.width >= original.height ? { width: MAX_SIDE } : { height: MAX_SIDE }).renderAsync() : original;
-  const saved = await image.saveAsync({ format: SaveFormat.JPEG, compress: 0.7, base64: true });
-  return saved.base64 ?? null;
+  try {
+    const original = await ImageManipulator.manipulate(uri).renderAsync();
+    const long = Math.max(original.width, original.height);
+    const image = long > MAX_SIDE ? await ImageManipulator.manipulate(original).resize(original.width >= original.height ? { width: MAX_SIDE } : { height: MAX_SIDE }).renderAsync() : original;
+    const saved = await image.saveAsync({ format: SaveFormat.JPEG, compress: 0.7, base64: true });
+    deletePhotoFiles([saved.uri]);
+    return saved.base64 ?? null;
+  } finally {
+    deletePhotoFiles([uri]);
+  }
 }
 
 export default function MealScreen() {

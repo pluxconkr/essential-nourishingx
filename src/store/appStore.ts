@@ -7,7 +7,8 @@ import { useSyncExternalStore } from 'react';
 
 import { checkinRepo, demoBackupRepo, initStorage, mealRepo, menuRepo, prefsRepo, syncQueueRepo, timingRepo, wipeStorage } from '@/data/repos';
 import { scenarioCheckins } from '@/domain/demo';
-import { addDays, dateKey } from '@/domain/time';
+import { HISTORY_DAYS } from '@/domain/hysteresis';
+import { UPLOAD_DAYS, addDays, dateKey, schoolDate } from '@/domain/time';
 import type { Checkin, DemoScenario, Meal, MealRecord, MenuDay, Prefs, Rating, Skipped, Training } from '@/domain/types';
 import { analyzeMeal as analyzeOnServer, connect, deleteCloudAccount, deleteMeal as deleteOnServer, fetchMeals, fetchMenus, uploadCheckins, type AnalyzeResult } from '@/services/cloud';
 import { deleteExportFile } from '@/services/export';
@@ -65,9 +66,13 @@ export interface CheckinInput {
   skipped: Skipped;
 }
 
-/** Meal photos older than this are not fetched; the rules read 7 days and the 30-day history at most. */
-const MEAL_DAYS = 31;
+/** Meal photos older than this are not fetched: the 30-day history, each day looking 6 days back. */
+const MEAL_DAYS = HISTORY_DAYS + 6;
 let syncing: Promise<void> | null = null;
+/** A sync asked for while one runs (a new check-in mid-upload) runs again right after it. */
+let syncAgain = false;
+/** Set while "Delete everything" runs: no sync may start, so nothing is uploaded or stored after the wipe. */
+let deleting = false;
 
 export const actions = {
   /** Consent recorded; the one daily reminder is scheduled when enabled. The switch only stays on if it was. */
@@ -111,16 +116,31 @@ export const actions = {
 
   /** Uploads queued check-ins, refreshes the student's meal analyses and today's menu. Safe to call any time; never throws. */
   sync(): Promise<void> {
-    if (state.prefs.consentedAt === null) return Promise.resolve();
-    syncing ??= (async () => {
+    if (state.prefs.consentedAt === null || deleting) return Promise.resolve();
+    if (syncing) {
+      syncAgain = true;
+      return syncing;
+    }
+    syncing = (async () => {
       try {
-        if (!(await connect())) return;
-        const queued = new Set(syncQueueRepo.get());
-        if (queued.size && state.prefs.demo === 'live') syncQueueRepo.remove(await uploadCheckins(state.checkins.filter((c) => queued.has(c.date))));
-        const meals = await fetchMeals(addDays(dateKey(), -MEAL_DAYS));
-        if (meals) setState({ meals: mealRepo.replaceAll(meals) });
-        const menus = await fetchMenus([dateKey(), 'weekday', 'weekend']);
-        if (menus) setState({ menus: menuRepo.replaceAll(menus) });
+        do {
+          syncAgain = false;
+          if (!(await connect())) return;
+          // The server takes check-ins from the last UPLOAD_DAYS days only; older ones stay on the phone.
+          const oldest = addDays(schoolDate(), -UPLOAD_DAYS);
+          syncQueueRepo.remove(syncQueueRepo.get().filter((d) => d < oldest));
+          const queued = new Set(syncQueueRepo.get());
+          if (queued.size && state.prefs.demo === 'live') {
+            const sent = state.checkins.filter((c) => queued.has(c.date));
+            const uploaded = new Set(await uploadCheckins(sent));
+            // A day saved again while its upload was in flight (every save is a new record) stays queued for the next pass.
+            syncQueueRepo.remove(sent.filter((c) => uploaded.has(c.date) && state.checkins.includes(c)).map((c) => c.date));
+          }
+          const meals = await fetchMeals(addDays(dateKey(), -MEAL_DAYS));
+          if (meals && !deleting) setState({ meals: mealRepo.replaceAll(meals) });
+          const menus = await fetchMenus([dateKey(), 'weekday', 'weekend']);
+          if (menus && !deleting) setState({ menus: menuRepo.replaceAll(menus) });
+        } while (syncAgain && !deleting);
       } catch {
         /* offline: the queue stays for the next try */
       } finally {
@@ -132,7 +152,7 @@ export const actions = {
 
   /** One meal photo, already resized on the phone. The result is kept as the student's own row. */
   async analyzeMeal(image: string, meal: Meal, day: string = dateKey()): Promise<AnalyzeResult> {
-    const result = await analyzeOnServer({ image, mediaType: 'image/jpeg', meal, day });
+    const result = await analyzeOnServer({ image, meal, day });
     if (result.status === 'ok') setState({ meals: mealRepo.add(result.record) });
     return result;
   },
@@ -160,15 +180,22 @@ export const actions = {
 
   /**
    * Remove the server account and its rows, then every stored key, the last export file and the reminder.
+   * A sync in flight finishes first and no new one starts, so nothing reaches the server or the phone after.
    * If the server cannot be reached nothing is deleted: wiping the phone first would lose the session needed
    * to delete the server copy later.
    */
   async deleteEverything(): Promise<'done' | 'offline'> {
-    if (!(await deleteCloudAccount().catch(() => false))) return 'offline';
-    await cancelReminder();
-    deleteExportFile();
-    wipeStorage();
-    setState({ prefs: prefsRepo.get(), checkins: [], timing: [], meals: [], menus: {} });
-    return 'done';
+    deleting = true;
+    try {
+      await syncing;
+      if (!(await deleteCloudAccount().catch(() => false))) return 'offline';
+      await cancelReminder();
+      deleteExportFile();
+      wipeStorage();
+      setState({ prefs: prefsRepo.get(), checkins: [], timing: [], meals: [], menus: {} });
+      return 'done';
+    } finally {
+      deleting = false;
+    }
   },
 };

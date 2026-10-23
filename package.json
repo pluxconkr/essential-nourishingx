@@ -12,7 +12,7 @@
     "test": "jest",
     "test:watch": "jest --watchAll",
     "typecheck": "tsc --noEmit",
-    "test:rls": "node --env-file=.env.local scripts/rls-test.mjs",
+    "test:rls": "node --env-file=.env.local --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/rls-test.mjs",
     "db:push": "node --env-file=.env.local scripts/env-run.mjs supabase db push --linked",
     "db:advisors": "node --env-file=.env.local scripts/env-run.mjs supabase db advisors --linked --type all",
     "functions:deploy": "node --env-file=.env.local scripts/env-run.mjs supabase functions deploy --use-api",

@@ -8,7 +8,7 @@ import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Line, Path, Text as SvgText } from 'react-native-svg';
 
 import { TH } from '@/domain/rules';
-import type { Clause, StateWord } from '@/domain/types';
+import { CLAUSES, type Clause, type StateWord } from '@/domain/types';
 import { t, tlist } from '@/i18n';
 import { ts, type StaffKey } from '@/i18n/staff';
 import type { DailyRow } from '@/services/staff';
@@ -40,6 +40,10 @@ export function useLoad<T>(load: () => Promise<T | null>): [Loaded<T>, () => Pro
 export const pct = (share: number | null | undefined) => (share == null ? '—' : `${Math.round(share * 100)}%`);
 export const num = (x: number | null | undefined, digits = 1) => (x == null ? '—' : Number(x).toFixed(digits));
 export const usd = (x: number) => `$${Number(x).toFixed(2)}`;
+
+// meal_analyses stores the router tier; ai_usage and weekly_reports store the API model id.
+const MODEL_NAME: Record<string, string> = { haiku: 'Claude Haiku 5.5', opus: 'Claude Opus 5.5', fable: 'Claude Fable 5.1', 'claude-haiku-5-5': 'Claude Haiku 5.5', 'claude-opus-5-5': 'Claude Opus 5.5', 'claude-fable-5-1': 'Claude Fable 5.1' };
+export const modelName = (tierOrId: string) => MODEL_NAME[tierOrId] ?? tierOrId;
 
 export function StaffPage({ title, subtitle, actions, children, testID }: { title: string; subtitle?: string; actions?: ReactNode; children: ReactNode; testID?: string }) {
   return (
@@ -224,7 +228,9 @@ export function DailyChart({ rows }: { rows: DailyRow[] }) {
   );
 }
 
-export const CLAUSES: readonly Clause[] = ['A', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'D'];
+/** TH values the way the staff strings print them, shared by clauseText and the rules page's Value column. */
+export const fullnessDrop = (delta: number) => Math.abs(delta).toFixed(1);
+export const lowProteinShare = () => ts('clause.share', { n: TH.c5_lowShare * 4 });
 
 /** One clause in threshold form, with its numbers read from TH (the rules' single source). */
 export function clauseText(c: Clause): string {
@@ -234,19 +240,19 @@ export function clauseText(c: Clause): string {
     case 'B1':
       return ts('clause.B1', { s: TH.b1_skipped, h: TH.b1_heavy });
     case 'B2':
-      return ts('clause.B2', { e: TH.b2_lowEnergy, d: Math.abs(TH.b2_fullDelta).toFixed(1) });
+      return ts('clause.B2', { e: TH.b2_lowEnergy, d: fullnessDrop(TH.b2_fullDelta) });
     case 'B3':
-      return ts('clause.B3', { s: TH.b3_skipped, h: TH.b3_heavy, d: Math.abs(TH.b3_fullDelta).toFixed(1), m: TH.b3_energyMean });
+      return ts('clause.B3', { s: TH.b3_skipped, h: TH.b3_heavy, d: fullnessDrop(TH.b3_fullDelta), m: TH.b3_energyMean });
     case 'C1':
       return ts('clause.C1', { s: TH.c1_skipped, h: TH.c1_heavy });
     case 'C2':
       return ts('clause.C2', { e: TH.c2_lowEnergy, s: TH.c2_skipped });
     case 'C3':
-      return ts('clause.C3', { d: Math.abs(TH.c3_fullDelta).toFixed(1), h: TH.c3_heavy });
+      return ts('clause.C3', { d: fullnessDrop(TH.c3_fullDelta), h: TH.c3_heavy });
     case 'C4':
       return ts('clause.C4', { f: TH.c4_lowFocus, s: TH.c4_skipped });
     case 'C5':
-      return ts('clause.C5', { m: TH.c5_minMeals, share: `${TH.c5_lowShare * 4} in 4`, p: TH.meal_lowProtein_g });
+      return ts('clause.C5', { m: TH.c5_minMeals, share: lowProteinShare(), p: TH.meal_lowProtein_g });
     case 'C6':
       return ts('clause.C6', { k: TH.c6_heavyDaysLowCarb, m: TH.c6_minMealsPerDay, c: TH.c6_lowCarb_g });
     case 'D':

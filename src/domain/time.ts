@@ -6,6 +6,15 @@ export function dateKey(d: Date = new Date()): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+/** The school's calendar date (New Hampshire, US Eastern): the day every server rule and staff total uses. */
+export function schoolDate(now: Date = new Date()): string {
+  return now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+}
+
+/** Check-ins older than this many days are no longer accepted by the server (private.upload_days() in
+ * supabase/migrations/20261023173407_staff_closed_weeks.sql); a day is final the day after that. */
+export const UPLOAD_DAYS = 2;
+
 export function parseKey(key: string): Date {
   const [y, m, d] = key.split('-').map(Number);
   return new Date(y, m - 1, d, 12, 0, 0, 0);

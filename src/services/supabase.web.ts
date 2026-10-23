@@ -14,6 +14,8 @@ export function getSupabase(): Promise<SupabaseClient | null> {
       const browser = typeof window !== 'undefined';
       return createClient(cfg.url, cfg.publishableKey, {
         auth: { storage: browser ? window.localStorage : undefined, autoRefreshToken: browser, persistSession: browser, detectSessionInUrl: false },
+        // A hung request would hold the sync, and "Delete everything" waits for the sync.
+        db: { timeout: 20_000 },
       });
     })();
   }

@@ -7,23 +7,22 @@
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
-import menuJson from '@/assets/data/menu.json';
 import { longDate } from '@/domain/format';
-import { weekday } from '@/domain/time';
+import { addDays } from '@/domain/time';
 import type { MenuDay } from '@/domain/types';
 import { t } from '@/i18n';
 import { ts } from '@/i18n/staff';
+import { bundledDays, itemCount, templateKey } from '@/services/menu';
 import { deleteMenuDay, menuRows, saveMenuDay } from '@/services/staff';
 import { Button, Callout, Cell, Footnote, Subhead } from '@/ui/primitives';
 import { Bullets, Panel, Section, StaffPage, useLoad } from '@/ui/staff/widgets';
 import { MIN_TAP, colors, radius, text } from '@/ui/theme';
 
 const MEALS = ['breakfast', 'lunch', 'dinner'] as const;
-const bundled = (menuJson as unknown as { days: Record<string, MenuDay> }).days;
-const isDate = (k: string) => /^\d{4}-\d{2}-\d{2}$/.test(k) && !Number.isNaN(Date.parse(k));
-const templateFor = (key: string) => (key === 'weekday' || key === 'weekend' ? key : weekday(key) === 0 || weekday(key) === 6 ? 'weekend' : 'weekday');
+// A real calendar date only: 2026-02-30 parses in JavaScript (as March 2) but no phone would ever look it up.
+const isDate = (k: string) => /^\d{4}-\d{2}-\d{2}$/.test(k) && addDays(k, 0) === k;
+const templateFor = (key: string) => (key === 'weekday' || key === 'weekend' ? key : templateKey(key));
 const dayLabel = (key: string) => (key === 'weekday' ? ts('ops.day.weekday') : key === 'weekend' ? ts('ops.day.weekend') : longDate(key));
-const count = (d: MenuDay) => d.breakfast.length + d.lunch.length + d.dinner.length;
 
 /** Tags are edited as text so typing a comma does not move the cursor; they become a list on save. */
 type EditItem = { item: string; station: string; tags: string };
@@ -56,7 +55,7 @@ export default function StaffOps() {
   const [draftFor, setDraftFor] = useState<{ key: string; rows: typeof rows } | null>(null);
   if (rows.status === 'ready' && (draftFor?.key !== key || draftFor.rows !== rows)) {
     setDraftFor({ key, rows });
-    setDraft(toDraft(savedDay ?? bundled[templateFor(key)]));
+    setDraft(toDraft(savedDay ?? bundledDays[templateFor(key)]));
   }
 
   const edit = (meal: (typeof MEALS)[number], i: number, field: keyof EditItem, value: string) =>
@@ -64,14 +63,17 @@ export default function StaffOps() {
   const add = (meal: (typeof MEALS)[number]) => setDraft((d) => (d ? { ...d, [meal]: [...d[meal], { item: '', station: '', tags: '' }] } : d));
   const remove = (meal: (typeof MEALS)[number], i: number) => setDraft((d) => (d ? { ...d, [meal]: d[meal].filter((_, k) => k !== i) } : d));
 
+  // Reload only after a change went through: a reload resets the draft, which would throw away unsaved edits.
   const save = async () => {
     if (!draft) return;
-    setMessage((await saveMenuDay(key, fromDraft(draft))) ? ts('ops.saved') : ts('ops.saveFailed'));
-    await reload();
+    const ok = await saveMenuDay(key, fromDraft(draft));
+    setMessage(ok ? ts('ops.saved') : ts('ops.saveFailed'));
+    if (ok) await reload();
   };
   const del = async () => {
-    setMessage((await deleteMenuDay(key)) ? ts('ops.deleted') : ts('ops.saveFailed'));
-    await reload();
+    const ok = await deleteMenuDay(key);
+    setMessage(ok ? ts('ops.deleted') : ts('ops.saveFailed'));
+    if (ok) await reload();
   };
   const addDate = () => {
     if (!isDate(newDate.trim())) return setMessage(ts('ops.day.invalid'));
@@ -88,7 +90,7 @@ export default function StaffOps() {
           <Section title={ts('ops.days.title')} foot={ts('ops.fallback')}>
             <Panel style={{ padding: 0 }}>
               {keys.map((k, i) => (
-                <Cell key={k} title={dayLabel(k)} subtitle={entered[k] ? ts('ops.items', { n: count(entered[k]) }) : ts('ops.notEntered')} accessory={k === key ? 'check' : 'none'} onPress={() => { setMessage(null); setKey(k); }} testID={`menu-day-${k}`} last={i === keys.length - 1} />
+                <Cell key={k} title={dayLabel(k)} subtitle={entered[k] ? ts('ops.items', { n: itemCount(entered[k]) }) : ts('ops.notEntered')} accessory={k === key ? 'check' : 'none'} onPress={() => { setMessage(null); setKey(k); }} testID={`menu-day-${k}`} last={i === keys.length - 1} />
               ))}
             </Panel>
             <View style={styles.addRow}>
@@ -110,7 +112,7 @@ export default function StaffOps() {
                         <TextInput value={it.item} onChangeText={(v) => edit(meal, i, 'item', v)} placeholder={ts('ops.item')} placeholderTextColor={colors.ink3} accessibilityLabel={`${t(`time.meal.${meal}`)} ${ts('ops.item')} ${i + 1}`} style={[text.subhead, styles.input, { flex: 3 }]} testID={`menu-${meal}-item-${i}`} />
                         <TextInput value={it.station} onChangeText={(v) => edit(meal, i, 'station', v)} placeholder={ts('ops.station')} placeholderTextColor={colors.ink3} accessibilityLabel={`${t(`time.meal.${meal}`)} ${ts('ops.station')} ${i + 1}`} style={[text.subhead, styles.input, { flex: 1.2 }]} />
                         <TextInput value={it.tags} onChangeText={(v) => edit(meal, i, 'tags', v)} placeholder={ts('ops.tags')} placeholderTextColor={colors.ink3} accessibilityLabel={`${t(`time.meal.${meal}`)} ${ts('ops.tags')} ${i + 1}`} style={[text.subhead, styles.input, { flex: 1.2 }]} />
-                        <Button title={ts('ops.remove')} variant="ghost" onPress={() => remove(meal, i)} />
+                        <Button title={ts('ops.remove')} variant="ghost" onPress={() => remove(meal, i)} accessibilityHint={`${t(`time.meal.${meal}`)} ${ts('ops.item')} ${i + 1}`} />
                       </View>
                     ))}
                     <Button title={ts('ops.addItem')} variant="ghost" onPress={() => add(meal)} style={{ alignSelf: 'flex-start' }} testID={`menu-${meal}-add`} />

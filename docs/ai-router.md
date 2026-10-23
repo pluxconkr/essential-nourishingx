@@ -38,8 +38,10 @@ The photo is never stored. It lives only in the memory of one request to the `an
    - totals are recomputed from the items, and the range must contain the estimate.
 
    A failed check gets one more try: Haiku's answer goes to Fable, Fable's to Opus.
-5. **Record** — every model call writes its tokens and cost to `ai_usage`. The function refuses new photos once
-   the project has spent its budget (USD 20) or a student has sent 12 photos in the last 24 hours.
+5. **Record** — before every model call the function reserves that call's worst-case cost in `ai_usage`, under a
+   database lock so that photos sent at the same moment cannot all slip under the cap; afterwards the row is set to
+   the real tokens and cost. A reservation is refused once the project has spent its budget (USD 20) or a student
+   has sent 12 photos in the last 24 hours; a deep analysis the budget cannot cover steps down to a cheaper model.
 
 ## How we tested it
 
@@ -100,12 +102,13 @@ What the tests caught:
 
 The weekly staff report (`supabase/functions/weekly-report`) makes **one** call to Claude Opus 5.5 per week. It sees
 only a table of group counts — never a photo or a row — and code checks its answer: at most 180 words, every number
-copied from the table, no causal or health words, "participants" rather than "students". Anything that fails is
-replaced by a template. About USD 0.015 a report. See [staff-dashboard.md](staff-dashboard.md#the-weekly-report).
+copied from the table (no number of its own, not even one spelled out), no causal or health words, "participants"
+rather than "students". Anything that fails is replaced by a template. About USD 0.013 a report, and only one per
+closed week. See [staff-dashboard.md](staff-dashboard.md#the-weekly-report).
 
 All Claude calls live in one file, `supabase/functions/_shared/claude.ts` (triage, deep analysis, weekly prose), and
-every one writes a ledger row. Total spent so far on everything — router tests, end-to-end tests and weekly
-reports — USD 6.52 of USD 20 (2026-10-24).
+every one reserves its worst case and then writes its real cost in the ledger (`_shared/ledger.ts`). Total spent so
+far on everything — router tests, end-to-end tests and weekly reports — USD 6.66 of USD 20 (2026-10-24).
 
 ## Run it yourself
 
@@ -114,5 +117,5 @@ node --env-file=.env.local scripts/eval-router.mjs --label my-run               
 node --env-file=.env.local scripts/eval-router.mjs --label fable --tier fable --source n5k   # force one model
 ```
 
-Results are written to `docs/eval/<label>.json`. Forcing a model uses the secret key and stores nothing except
-the cost rows.
+Results are written to `docs/eval/<label>.json`. The harness calls with the secret key, so it stores nothing except
+the cost rows, and each answer carries the route, triage and cost that a student's answer leaves out.

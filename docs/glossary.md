@@ -16,6 +16,10 @@ in it.
 
 **Clause** — one rule in the rule list (A, B1–B3, C1–C6, D). The first clause that matches chooses the word.
 
+**Closed week** — a Monday-to-Sunday week that can no longer change, because no check-in may still be sent for any of
+its days (see *upload window*). Staff only ever see closed weeks, so two of their numbers can never be subtracted to
+reveal one student's check-in.
+
 **Cohort** — a group of students counted together. Rows are marked `real` or `synthetic` (simulated).
 
 **Edge Function** — a small program that runs on Supabase's servers, not on the phone. NourishingX has three:
@@ -49,6 +53,10 @@ are hidden, because a total of three people can point at one of them.
 **Publishable key / secret key** — two kinds of Supabase key. The publishable key is meant to be public and can only do
 what RLS allows. The secret key bypasses RLS and must stay on the server.
 
+**Reservation (AI budget)** — before each Claude call, the worst it could cost is written into the `ai_usage` ledger
+inside a database lock, and corrected to the real cost afterwards. Calls made at the same moment therefore cannot
+together spend past the budget.
+
 **Router** — the code that decides which Claude model analyses a photo, based on a quick first look by Haiku.
 
 **Row-level security (RLS)** — the database feature that checks every query row by row against the policies, so a
@@ -68,3 +76,6 @@ shown before any real student uses it. Always labelled.
 **Token (AI)** — the unit Claude counts text and images in; costs are charged per million tokens.
 
 **Triage** — the first, fast look at a photo (by Claude Haiku 5.5) that says whether it is food and how hard it is.
+
+**Upload window** — the days a check-in can still be sent to the server: today and the 2 days before, in school time.
+An older check-in stays on the phone and still counts for your own word.

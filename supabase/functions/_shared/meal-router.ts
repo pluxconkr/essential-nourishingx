@@ -120,6 +120,11 @@ export function nextTier(t: Tier): Tier | null {
   return RETRY_TIER[t];
 }
 
+/** The cheaper model to try when the budget cannot cover this one. */
+export function stepDown(t: Tier): Tier | null {
+  return BUDGET_STEP_DOWN[t];
+}
+
 // ---------------------------------------------------------------------------------------------- deep analysis
 /** Food groups: the five USDA MyPlate groups (https://www.myplate.gov/eat-healthy/what-is-myplate) plus the
  * extras a dining-hall photo needs (oils and spreads, sweets, drinks, and dishes that mix several groups). */

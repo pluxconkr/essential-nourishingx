@@ -53,7 +53,9 @@ for (const name of ['ANTHROPIC_API_KEY', 'SUPABASE_SECRET_KEY', 'SUPABASE_ACCESS
   const value = process.env[name];
   check(`no bundle holds ${name}`, Boolean(value) && !android.includes(value) && !web.includes(value));
 }
-check('web bundle carries the public Supabase URL and publishable key', web.includes(process.env.SUPABASE_URL) && web.includes(process.env.SUPABASE_PUBLISHABLE_KEY));
+// Without the settings, includes(undefined) would search for the text "undefined" and pass.
+const { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } = process.env;
+check('web bundle carries the public Supabase URL and publishable key', Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY) && web.includes(SUPABASE_URL) && web.includes(SUPABASE_PUBLISHABLE_KEY));
 
 const failed = results.filter((r) => !r).length;
 console.log(`\n${results.length - failed}/${results.length} bundle checks passed`);

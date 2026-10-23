@@ -14,23 +14,33 @@ npm run staff:create        # makes dining.demo@example.com and saves its passwo
 
 The role is stored in `app_metadata.role = 'staff'`, which only the server can set. Signed out, any `/staff` address
 shows the sign-in form in place, and the page you asked for opens once you are in. The dashboard keeps its sign-in
-under its own storage key, so it never replaces a student session in the same browser.
+under its own storage key, so it never replaces a student session in the same browser, and in the tab's
+`sessionStorage`, so closing the tab signs you out (useful on a shared office computer).
 
 ## Every view
 
 | View | Route | What it shows | Where the numbers come from |
 |---|---|---|---|
-| Weekly overview | `/staff` | Participants, check-ins each, mean energy / fullness / focus (with last week), skipped meals, heavy training; the weekly report in prose; 30 days of daily means; energy by day of week | `staff_overview(7)`, `staff_daily(30)`, the latest row of `weekly_reports` |
-| Menu performance | `/staff/menu` | Photographed meals by slot (photos, participants, average kcal, protein, carbohydrate, fat, fibre); food groups on plates; actions when an average falls below published guidance; today's menu | `staff_meals(7)`, `menu_days` |
-| Meal photos & AI | `/staff/meals` | Which model did the deep analysis, how hard the photos were, low-confidence estimates, AI spend against the USD 20 cap, the router test result | `staff_meals(7)`, `staff_ai_spend()`, [ai-router.md](ai-router.md) |
+| Weekly overview | `/staff` | Participants, days shown, check-ins each, mean energy / fullness / focus (with last week), skipped meals, heavy training; the weekly report in prose; the last 30 final days of daily means; energy by day of week | `staff_overview()`, `staff_daily(30)`, the latest row of `weekly_reports` |
+| Menu performance | `/staff/menu` | Photographed meals by slot (photos, participants, average kcal, protein, carbohydrate, fat, fibre); food groups on plates; actions when an average falls below published guidance; today's menu | `staff_meals()`, `menu_days` |
+| Meal photos & AI | `/staff/meals` | Which model did the deep analysis, how hard the photos were, low-confidence estimates, AI spend against the USD 20 cap, the router test result | `staff_meals()`, `staff_ai_spend()`, [ai-router.md](ai-router.md) |
 | Menu table & reminder | `/staff/ops` | Edit the weekday and weekend templates or a dated day; the reminder policy | `menu_days` (staff can edit; everyone can read) |
-| Aggregate states | `/staff/wellness` | How many participants saw each word this week, three or more days at Needs attention, four weeks as counts, which rule chose the word | the last four rows of `weekly_reports` |
+| Aggregate states | `/staff/wellness` | How many participants saw each word at the end of the week, three or more days at Needs attention, four weeks as counts (each labelled with its share of simulated students), which rule chose the word | the last four rows of `weekly_reports` |
 | Rule engine | `/staff/rules` | A tester over the rule inputs, demo weeks, the rules in order with the matching one highlighted, where each threshold comes from | `evaluateRules` from `src/domain/rules.ts` — the phone's own function |
 | Data & consent | `/staff/data` | What is stored and never collected, retention, re-identification controls, the consent sentences, approvals a pilot still needs | the code and `src/i18n/en.ts` |
 | Scope guard | `/staff/scope` | Ten things this product will never do and what to say if someone asks; the build counters; weekly review questions | `src/domain/counters.ts` (checked against the code by a test) |
 
 Every view shows a dark banner while simulated students are in the numbers:
-*"Synthetic data · all 60 participants this week are simulated students…"*.
+*"Synthetic data · all 60 participants in the week shown are simulated students…"*. Each stored report also carries
+its own label, so an older synthetic report is never mistaken for real students.
+
+### Which week?
+
+Every number is for the **latest complete week, Monday to Sunday**, and only once it is *final*: students can send a
+check-in for the last 2 days only, so a week appears three days after its Sunday. A day counts only if 10 or more
+participants checked in on it (*Days shown* says how many of the 7 did). There is no way to pick another window.
+This is deliberate: live or overlapping totals could be subtracted from each other to reveal one student's check-in
+([security-and-privacy.md](security-and-privacy.md#why-closed-weeks)).
 
 ### Why there is no list of students
 
@@ -44,7 +54,7 @@ setting.
 
 ```mermaid
 flowchart LR
-  R[("Six weeks of check-ins<br/>and two weeks of meal estimates")] --> C["cohortReport():<br/>the phone's balanceFor() for<br/>every participant"]
+  R[("A closed week, plus the six weeks<br/>of check-ins and meal estimates<br/>its words look back on")] --> C["cohortReport():<br/>the phone's balanceFor() for<br/>every participant"]
   C --> K{"10 or more<br/>participants?"}
   K -->|no| X["Saved as not reported"]
   K -->|yes| T["Counts only: words, rules, means,<br/>shares, this week and last"]
@@ -65,17 +75,23 @@ thing about the group or the dining hall worth watching. Then `checkProse()` che
 that fails is replaced by `templateProse()`, which passes the same checks (tested in `__tests__/weekly-prose.test.ts`).
 Each report is labelled with where its prose came from, the model, the time and a confidence word with its reason.
 
-A real report from the synthetic cohort (Claude Opus 5.5, about USD 0.015):
+A real report from the synthetic cohort (Claude Opus 5.5, about USD 0.013):
 
-> This week (2026-10-17 to 2026-10-23), all 60 participants are simulated, so these figures describe test data, not
-> real participants. There were 321 check-ins. Balance words: Stable 54, Watch 3, Needs attention 1, Not enough data 2.
-> Participants at Needs attention 3 or more days in a row: 1. …
+> For the week 2026-10-12 to 2026-10-18, all 60 participants are simulated (100%), so these figures describe test data
+> rather than real check-ins. There were 321 check-ins. Balance words: Stable 53, Watch 4, Needs attention 1, Not
+> enough data 2. Participants at Needs attention 3 or more days in a row: 1. …
 >
-> *Confidence: Low — all 60 participants are simulated and only two weeks are available, so the pattern is suggestive
-> only.*
+> *Confidence: Low — all 60 participants are simulated and the table covers only this week and the previous week, so
+> the pattern is suggestive only.*
 
-**Regenerate** on the overview runs the function for the current week. If a model report was written in the last 15
-minutes, that one is shown again instead of paying for another call.
+The checks are strict on purpose: on the first try every answer was rejected because the model explained its
+confidence with "only *two* weeks are available" — a number the table does not hold, written as a word. Rather than
+loosen the check, the instructions now tell the model to say "this week and the previous week" instead of counting
+the weeks; four tries in a row then passed.
+
+**Regenerate** on the overview runs the function for the latest closed week. Because that week can no longer change,
+an AI-written report of it is final: Regenerate shows it again without another call. A report that fell back to the
+template can ask the model again, at most once every 15 minutes.
 
 ## The synthetic cohort
 
@@ -89,8 +105,9 @@ plan:
 - 40 % of students photograph about half of their main meals; every synthetic plate is built only from the USDA foods
   listed in [sources.md](sources.md), so its numbers are traceable.
 
-`npm run seed:synthetic` replaces the synthetic rows with a fresh 30 days ending today and writes the last four weekly
-reports. Every synthetic row is stored with `cohort = 'synthetic'`; students cannot create such rows.
+`npm run seed:synthetic` replaces the synthetic rows, and the weekly reports built from them, with a fresh 30 days
+ending on the Sunday of the latest closed week, then writes that week's report and the three before it. Every
+synthetic row is stored with `cohort = 'synthetic'`; students cannot create such rows.
 `__tests__/synthetic.test.ts` checks that the same seed always gives the same cohort, the profile mix, the two sparse
 students, every word present on the last day, Watch plus Needs attention at most 20 %, and a visible exam week.
 
@@ -102,7 +119,9 @@ over the table bundled with the app (`menuForToday` in `src/services/menu.ts`).
 
 ## Tested by
 
-- `npm run e2e:staff` — a real browser signs in, refuses a wrong password, opens every view, checks that the word
-  counts on the page equal the stored report, loads each demo week in the rule tester, saves a menu day that a phone
-  can then read (and deletes it), regenerates the report, tries a narrow window and signs out.
-- `npm run test:rls` — staff get totals but no rows, and students cannot run the weekly report.
+- `npm run e2e:staff` — a real browser signs in, refuses a wrong password, opens every view, checks the days shown and
+  that the word counts on the page equal the stored report, loads each demo week in the rule tester, saves a menu day
+  that a phone can then read (and deletes it), presses Regenerate (which must reuse the closed week's report without a
+  Claude call), tries a narrow window and signs out.
+- `npm run test:rls` — staff get totals but no rows, only for the latest closed week and with no count when
+  suppressed, and students cannot run the weekly report.

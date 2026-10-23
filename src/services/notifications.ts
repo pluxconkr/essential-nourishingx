@@ -11,7 +11,7 @@ import { t } from '@/i18n';
 
 export const CHANNEL_ID = 'nourishingx';
 /** One fixed id for the one reminder, so a cancel always finds it, whichever call scheduled it. */
-export const REMINDER_ID = 'nourishingx-daily-reminder';
+const REMINDER_ID = 'nourishingx-daily-reminder';
 let configured = false;
 
 export async function configureNotifications(): Promise<void> {

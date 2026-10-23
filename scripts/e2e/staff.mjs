@@ -4,7 +4,8 @@
  * account from .env.staff.local (npm run staff:create): wrong password refused → every view renders → the page's word
  * counts equal the stored weekly report → the rule tester gives the phone's word for each demo week → a menu edit
  * reaches menu_days and a phone can read it (then it is removed again) → Regenerate → narrow window → sign-out.
- * Expects the synthetic cohort (npm run seed:synthetic). Regenerate costs one prose call unless a report is < 15 min old.
+ * Expects the synthetic cohort (npm run seed:synthetic), whose latest closed week has its report already, so
+ * Regenerate must return that stored report and make no Claude call.
  */
 import { createClient } from '@supabase/supabase-js';
 
@@ -42,7 +43,9 @@ try {
   await page.waitForTimeout(2500);
   await shot('02-overview');
   const kpi = await byId('kpi-participants').innerText().catch(() => '');
-  check("the overview shows this week's participants", /Participants\s+\d+/i.test(kpi), kpi.replace(/\n/g, ' | '));
+  check("the overview shows the latest closed week's participants", /Participants\s+\d+/i.test(kpi), kpi.replace(/\n/g, ' | '));
+  const days = await byId('kpi-days').innerText().catch(() => '');
+  check('the overview says how many of its 7 days are shown', /Days shown\s+[1-7]\b/i.test(days), days.replace(/\n/g, ' | '));
   check('the synthetic-data banner is on the page', /Synthetic data|Includes synthetic data/.test(await byId('staff-banner').innerText().catch(() => '')));
   check('the weekly report is shown with its source label', /Written by Claude|Written from a template/.test(await byId('staff-prose').innerText().catch(() => '')));
 
@@ -90,14 +93,16 @@ try {
 
   await byId('nav-overview').first().click();
   await visible('staff-overview');
+  const proseCalls = async () => (await admin.from('ai_usage').select('id', { count: 'exact', head: true }).eq('fn', 'weekly-report')).count;
+  const callsBefore = await proseCalls();
   await byId('staff-regenerate').click();
-  const written = await page
-    .getByText(/Written by Claude|Written from a template|A report was written in the last 15 minutes/)
+  const reused = await page
+    .getByText('The stored report is shown')
     .first()
-    .waitFor({ timeout: 120000 })
+    .waitFor({ timeout: 60000 })
     .then(() => true)
     .catch(() => false);
-  check("Regenerate writes or reuses this week's report", written && !(await page.getByText('The report could not be written').isVisible()));
+  check("Regenerate returns the closed week's stored report without a new Claude call", reused && (await proseCalls()) === callsBefore);
 
   t.step('narrow window');
   await page.setViewportSize({ width: 390, height: 844 });
