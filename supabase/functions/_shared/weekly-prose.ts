@@ -33,7 +33,6 @@ export interface WeekNumbers {
   heavyShare?: number;
   states?: Record<'stable' | 'watch' | 'attention' | 'nodata', number>;
   attentionStreak3?: number;
-  mealStudents?: number;
 }
 
 const pct = (share: number) => `${Math.round(share * 100)}%`;
@@ -50,7 +49,6 @@ export function displayTable(week: WeekNumbers, previous?: WeekNumbers | null): 
     `Check-ins with heavy training: ${pct(week.heavyShare ?? 0)}`,
     `Balance words from the same rules as the phone: Stable ${week.states.stable}, Watch ${week.states.watch}, Needs attention ${week.states.attention}, Not enough data ${week.states.nodata}`,
     `Participants at Needs attention 3 or more days in a row: ${week.attentionStreak3}`,
-    `Participants who added at least one meal photo: ${week.mealStudents ?? 'fewer than 10'}`,
   );
   if (previous && !previous.suppressed && previous.states) {
     lines.push(
@@ -87,7 +85,7 @@ function allowedNumbers(week: WeekNumbers, previous?: WeekNumbers | null): Set<s
   const out = new Set<string>();
   for (const w of [week, previous]) {
     if (!w || w.suppressed || !w.states) continue;
-    for (const v of [w.students, w.checkins, w.meanEnergy, w.meanFullness, w.meanFocus, w.attentionStreak3, w.mealStudents, ...Object.values(w.states)]) if (v != null) out.add(String(v));
+    for (const v of [w.students, w.checkins, w.meanEnergy, w.meanFullness, w.meanFocus, w.attentionStreak3, ...Object.values(w.states)]) if (v != null) out.add(String(v));
     for (const share of [w.syntheticShare, w.skippedShare, w.heavyShare]) if (share != null) out.add(String(Math.round(share * 100)));
   }
   return out;

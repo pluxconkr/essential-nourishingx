@@ -109,7 +109,9 @@ between still showed up as the difference (found by review, 2026-10-24). Now a w
 (`supabase/migrations/20261023192805_publish_weeks_once.sql`):
 
 1. `freeze_week` stores the week's overview, its meal-photo numbers and its seven days, in one database transaction,
-   and returns, from that same transaction, the rows the weekly report is worked out from.
+   and returns, from that same transaction, the rows the weekly report is worked out from. It holds a lock that keeps
+   anyone from writing to check-ins or meal estimates for those few milliseconds, so everything it reads is the same
+   moment (`supabase/migrations/20261023194359_freeze_week_one_view.sql`).
 2. The weekly-report function works out the report from exactly those rows. The report's "previous week" is the
    previous week's published report, never worked out again.
 3. `publish_week` stores the report only if that freeze is still the latest one. Storing the report is what publishes
@@ -136,7 +138,9 @@ closed ones, and `npm run seed:synthetic` refuses to run over days that already 
 the exact number of participants at each Balance word, which rule chose the word, and how many were at *Needs
 attention* 3 or more days in a row — even when that number is 1. The Health Center needs to know that someone may
 need support, and a count names no one: there is no list, query or export behind it (see "Not hidden — not built" on
-the dashboard). Every other small group, such as the participants who photographed a meal, is dropped.
+the dashboard). Every other small group is dropped, and no count is published twice under two definitions: the
+report no longer counts the participants who photographed a meal, because the meal-photo page counts them its own way
+and the two numbers could be subtracted.
 
 ### The upload window
 

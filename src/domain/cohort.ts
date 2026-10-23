@@ -37,8 +37,6 @@ export interface CohortReport {
   attentionStreak3?: number;
   /** Which rule chose each student's word. */
   clauses?: Partial<Record<Clause, number>>;
-  /** Students with at least one analysed meal photo this week; absent under MIN_GROUP, like any other small group. */
-  mealStudents?: number;
 }
 
 // The report needs the word and the clause, not the actions a student is shown.
@@ -71,7 +69,6 @@ export function cohortReport(checkins: readonly CohortCheckin[], meals: readonly
   const clauses: Partial<Record<Clause, number>> = {};
   let streak3 = 0;
   let synthetic = 0;
-  let mealStudents = 0;
   for (const [userId, cs] of active) {
     const own = mealsByUser.get(userId) ?? [];
     const b = balanceFor(
@@ -84,7 +81,6 @@ export function cohortReport(checkins: readonly CohortCheckin[], meals: readonly
     clauses[b.clause] = (clauses[b.clause] ?? 0) + 1;
     if (b.attentionStreak >= FIRM_PROMPT_DAYS) streak3 += 1;
     if (cs[0].synthetic) synthetic += 1;
-    if (own.some((m) => inWeek(m.date))) mealStudents += 1;
   }
   const week = checkins.filter((c) => shown(c.date));
   const mean = (f: (c: CohortCheckin) => number) => (week.length ? Math.round((week.reduce((a, c) => a + f(c), 0) / week.length) * 100) / 100 : undefined);
@@ -103,6 +99,5 @@ export function cohortReport(checkins: readonly CohortCheckin[], meals: readonly
     states,
     attentionStreak3: streak3,
     clauses,
-    mealStudents: mealStudents >= MIN_GROUP ? mealStudents : undefined,
   };
 }

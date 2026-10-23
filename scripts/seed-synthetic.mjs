@@ -46,6 +46,12 @@ if (!clearOnly) {
   }
 }
 
+if (!clearOnly) {
+  // The four weeks about to be published hold no real rows (checked above), so any report on them, even a suppressed
+  // one written before seeding (it has no syntheticShare), is unpublished and written again below.
+  const weekStarts = [27, 20, 13, 6].map((d) => addDays(weekEnd, -d));
+  await must('unpublish the seeded weeks', admin.from('weekly_reports').delete().in('week_start', weekStarts));
+}
 await must('remove synthetic check-ins', admin.from('checkins').delete().eq('cohort', 'synthetic'));
 await must('remove synthetic meal estimates', admin.from('meal_analyses').delete().eq('cohort', 'synthetic'));
 // Deleting a week's report unpublishes it (staff read published weeks only), and the next report freezes the week
