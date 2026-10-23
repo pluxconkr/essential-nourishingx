@@ -39,7 +39,7 @@ The photo is never stored. It lives only in the memory of one request to the `an
 
    A failed check gets one more try: Haiku's answer goes to Fable, Fable's to Opus.
 5. **Record** — every model call writes its tokens and cost to `ai_usage`. The function refuses new photos once
-   the project has spent its budget (USD 20) or a student has sent 12 photos in a day.
+   the project has spent its budget (USD 20) or a student has sent 12 photos in the last 24 hours.
 
 ## How we tested it
 

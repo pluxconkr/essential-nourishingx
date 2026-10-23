@@ -27,10 +27,8 @@ export const staffStrings = {
 
   // ---- common ----
   'common.suppressed': 'Fewer than 10 participants, so nothing is shown',
-  'common.refresh': 'Refresh',
   'common.unavailable': 'Could not load this. Check the connection and refresh.',
   'common.window': '{from} to {to}',
-  'common.est': 'est.',
 
   // ---- sign-in ----
   'signin.title': 'Staff sign-in',
@@ -113,7 +111,7 @@ export const staffStrings = {
   'clause.C3': 'Fullness down by {d}+ and heavy {h}+ → Watch',
   'clause.C4': 'Focus 2 or lower on {f}+ days and skipped {s}+ → Watch',
   'clause.C5': 'Of {m}+ photographed main meals, at least {share} under {p} g protein → Watch',
-  'clause.C6': 'On {k}+ heavy days, photographed main meals together under {c} g carbohydrate → Watch',
+  'clause.C6': 'On {k}+ heavy days with {m}+ photographed main meals, those meals together under {c} g carbohydrate → Watch',
   'clause.D': 'No warning rule matched → Stable',
 
   // ---- menu performance ----

@@ -248,7 +248,7 @@ export function clauseText(c: Clause): string {
     case 'C5':
       return ts('clause.C5', { m: TH.c5_minMeals, share: `${TH.c5_lowShare * 4} in 4`, p: TH.meal_lowProtein_g });
     case 'C6':
-      return ts('clause.C6', { k: TH.c6_heavyDaysLowCarb, c: TH.c6_lowCarb_g });
+      return ts('clause.C6', { k: TH.c6_heavyDaysLowCarb, m: TH.c6_minMealsPerDay, c: TH.c6_lowCarb_g });
     case 'D':
       return ts('clause.D');
   }

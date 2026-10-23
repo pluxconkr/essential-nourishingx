@@ -227,7 +227,7 @@ npx expo export --platform web && npx expo serve    # then open http://localhost
 ## How we know it works
 
 ```bash
-npm test                  # 112 unit tests: rules, hysteresis, strings, every screen's safety bar, router checks, cohort, prose checks
+npm test                  # unit tests: rules, hysteresis, strings, every screen's safety bar, router checks, cohort, prose checks
 npm run typecheck && npm run lint
 npm run test:rls          # 35 checks against the real database as anonymous, student, other student and staff
 npm run check:bundles     # the phone bundle holds no staff code, no Claude SDK, no secret

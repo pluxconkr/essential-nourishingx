@@ -56,3 +56,14 @@ test('the Health Center sheet itself keeps the disclaimer', async () => {
   await renderRouter('./src/app', { initialUrl: '/health' });
   expect((await safetyIn('health')).disclaimer).toBeTruthy();
 });
+
+test.each(['/staff', '/staff/rules', '/staff/sign-in'])('on a phone, %s goes home and renders no staff code', async (url) => {
+  await actions.consent(15, 0, false);
+  // With RNTL 14's async render, expo-router attaches getPathname() to the returned promise itself.
+  const rendered = renderRouter('./src/app', { initialUrl: url });
+  await rendered;
+  expect(await screen.findByTestId('home')).toBeTruthy();
+  expect(rendered.getPathname()).toBe('/');
+  expect(screen.queryByTestId('staff-sign-in')).toBeNull();
+  expect(screen.queryByText('NourishingX staff')).toBeNull();
+});

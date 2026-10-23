@@ -56,7 +56,7 @@ serious rules come first.
 | C3 | fullness down by 1.0+ **and** heavy 2+ | Watch |
 | C4 | focus 2 or lower on 4+ days **and** skipped 2+ | Watch |
 | C5 | of 4+ photographed main meals, at least 3 in 4 under 10 g protein | Watch |
-| C6 | on 2+ heavy days, the photographed main meals together had under 60 g carbohydrate | Watch |
+| C6 | on 2+ heavy days with at least 2 photographed main meals, those meals together had under 60 g carbohydrate | Watch |
 | D | nothing above matched | Stable |
 
 The thresholds live in one object, `TH`, at the top of `src/domain/rules.ts`. Where each number comes from — and

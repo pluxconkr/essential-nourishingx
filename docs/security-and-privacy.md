@@ -91,7 +91,7 @@ averages at all.
 - The function passes it to Claude and keeps it only in memory; it is not written to storage, the database or logs.
 - Only the validated estimate is saved, as the student's own row.
 - Each photo's cost goes into the `ai_usage` ledger. The function refuses new photos when the project's USD 20 budget
-  would be passed or a student has sent 12 photos in a day.
+  would be passed or a student has sent 12 photos in the last 24 hours.
 
 What leaves the school's server: the photo goes to Anthropic's Claude API to be analysed. The Privacy screen tells
 students this before they take a photo, and consent says it in plain words.
