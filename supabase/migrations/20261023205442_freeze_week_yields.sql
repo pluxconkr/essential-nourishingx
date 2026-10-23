@@ -17,7 +17,7 @@
 -- still let the meal estimate die in the deadlock, and it times each of the two tables separately.)
 -- Also:
 -- - The published-already check runs before the table lock. It needs only the advisory lock, which publish_week takes
---   too, so a call for a published week no longer blocks anyone.
+--   too, so a call for a published week no longer blocks any upload or deletion.
 -- - The rows returned cover the 36 days the report reads (src/domain/cohort.ts: 30 days of hysteresis, each looking
 --   6 days back), not 44. Seven of the extra 8 days were for recomputing the previous week, which 20261023192805
 --   removed; the eighth was never read.

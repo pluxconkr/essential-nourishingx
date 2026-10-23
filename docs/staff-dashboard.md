@@ -112,7 +112,7 @@ plan:
 `npm run seed:synthetic` replaces the synthetic rows, and the weekly reports built from them, with a fresh 30 days
 ending on the Sunday of the latest closed week, then writes that week's report and the three before it. One of those
 four weeks that is already published is replaced only if none of its own numbers came from real students; otherwise
-the seed changes nothing and stops, so a week with real students' numbers is never replaced. Every
+the seed changes nothing and stops, so a week whose own numbers came from real students is never replaced. Every
 synthetic row is stored with `cohort = 'synthetic'`; students cannot create such rows.
 `__tests__/synthetic.test.ts` checks that the same seed always gives the same cohort, the profile mix, the two sparse
 students, every word present on the last day, Watch plus Needs attention at most 20 %, and a visible exam week.

@@ -7,7 +7,8 @@
  * and the three before it through the weekly-report function, oldest first, which publishes each week: the earlier
  * weeks from the template, the latest with its one prose call. A week of those four that is already published is
  * replaced only if none of its own numbers shown to staff came from real students (public.weeks_showing_real);
- * otherwise the seed refuses to run, because a week that showed staff numbers from real students never changes.
+ * otherwise the seed refuses to run, because a week that showed staff numbers of its own from real students never
+ * changes.
  * Synthetic and real rows never share a day. Anyone with this repo can regenerate the synthetic answers (seed 2027),
  * so on a shared day subtracting them from the staff totals would give the real students' answers back (code review
  * 2026-10-24). Real students can write only open days (the upload window) and the seed writes only closed ones, so the
@@ -54,7 +55,7 @@ if (!clearOnly) {
   // seed refuses: such a week never changes.
   const real = await must('check the seeded weeks', admin.rpc('weeks_showing_real', { p_week_ends: weeks.map((w) => w.end) }));
   if (real.length) {
-    console.error(`Staff were shown numbers from real students for the week ending ${real.join(', ')}, and such a week never changes. Nothing was changed.`);
+    console.error(`Staff were shown numbers from real students for the week(s) ending ${real.join(', ')}, and such a week never changes. Nothing was changed.`);
     process.exit(1);
   }
   await must('unpublish the seeded weeks', admin.from('weekly_reports').delete().in('week_start', weekStarts));
